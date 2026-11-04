@@ -1,7 +1,7 @@
-"""Device-independent audio contracts.
+"""Device-independent microphone input contract.
 
-The Windows audio backend will implement these contracts after the target
-hardware is available for integration work.
+The Windows audio backend will implement this contract after the target
+hardware is available for integration work. Windows owns device selection.
 """
 
 from __future__ import annotations
@@ -21,21 +21,17 @@ class AudioFrame:
     timestamp: float
 
 
-class AudioIO(Protocol):
-    """Async audio input/output contract using Windows system defaults."""
+class AudioInput(Protocol):
+    """Async microphone input contract using the Windows system default."""
 
-    async def __aenter__(self) -> AudioIO:
-        """Open the default input and output streams."""
+    async def __aenter__(self) -> AudioInput:
+        """Open the default microphone input stream."""
         ...
 
     async def __aexit__(self, exc_type: object, exc: object, traceback: object) -> None:
-        """Stop streams and release audio resources."""
+        """Stop the input stream and release audio resources."""
         ...
 
     def frames(self) -> AsyncIterator[AudioFrame]:
         """Yield microphone frames until the stream closes."""
-        ...
-
-    async def write_frame(self, frame: AudioFrame) -> None:
-        """Play one PCM frame through the Windows default output."""
         ...

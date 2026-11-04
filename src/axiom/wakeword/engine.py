@@ -15,5 +15,5 @@ class WakeWordEngine(Protocol):
         ...
 
     def reset(self) -> None:
-        """Reset detector state after a conversation turn."""
+        """Reset detector state after reporting a wake-word match."""
         ...

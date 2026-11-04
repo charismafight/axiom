@@ -5,19 +5,18 @@
 
 ## Context
 
-The user configures microphones and speakers in Windows. Axiom does not need to recognize the Yealink SP96 by name or reproduce the operating system's device-selection controls.
+The user configures microphones and speakers in Windows. Axiom only needs microphone input to detect the local wake phrase; ChatGPT Desktop owns audio during its Voice session.
 
 ## Decision
 
 - Windows Sound Settings is the sole owner of microphone and speaker selection.
-- Axiom opens the system-selected default input and output streams.
-- Axiom does not enumerate devices for product selection, match SP96 names, or change Windows audio settings.
-- Axiom reports input and output stream failures separately and points the user to Windows Sound Settings.
-- The SP96 is used for end-to-end validation after it arrives, not as a runtime identity requirement.
+- Axiom opens the system-selected default microphone input for offline wake-word detection.
+- Axiom has no speaker output stream and does not enumerate devices, match SP96 names, or change Windows audio settings.
+- ChatGPT Desktop uses the Windows-selected audio devices for its Voice interaction.
+- Audio used by Axiom's wake-word detector is not saved by default.
 
 ## Consequences
 
 - The product has no device picker or device-name configuration.
-- Audio backend selection must be checked to ensure it follows Windows defaults.
-- Axiom remains compatible with other microphones and speakers selected in Windows.
-- Tests on the target machine still need to cover default-device changes, disconnection, and reconnection.
+- The future audio backend must use Windows' default input and handle stream failure and reconnect.
+- The SP96 is used for end-to-end validation after it arrives, not as a runtime identity requirement.

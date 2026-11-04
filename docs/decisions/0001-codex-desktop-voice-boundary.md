@@ -1,30 +1,33 @@
 # ADR 0001: Codex Desktop Voice Boundary
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-11-04
 
 ## Context
 
-The initial project request includes voice control for Codex Desktop. ChatGPT Desktop supports voice conversations in Codex tasks through an in-app entry point. Public product documentation describes starting a voice chat in the desktop app, but does not document an external API for starting or controlling that session.
+Axiom's first use case is spoken English practice. The agreed flow is an offline local wake phrase followed by ChatGPT Desktop's native Voice experience in a Codex task. Axiom should not own the AI conversation or reproduce ChatGPT's speech capture and output.
 
-Axiom also has a broader product goal: a local wake phrase and an AI conversation that can later expand beyond coding tasks. Coupling Axiom's core session to undocumented desktop controls would make the product dependent on an unstable interface and would prevent independent voice sessions.
+OpenAI's user documentation says Voice in Work or Codex on desktop can be started with a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex). The shortcut key itself is chosen by the user; no default is assumed.
 
 ## Decision
 
-- Treat Codex Desktop as an optional external voice surface behind an adapter.
-- Start with readiness checks and a handoff guide for the documented in-app voice flow.
-- Keep Axiom's own audio runtime and conversation provider independent.
-- Add automated Codex Desktop control only if a documented, supported interface becomes available.
-- Do not inject audio, text, or clicks into the desktop UI as the integration contract.
+- Axiom listens for `Hey Axiom` using a local, offline wake-word engine.
+- On detection, Axiom sends the user-configured ChatGPT Desktop Voice shortcut.
+- ChatGPT Desktop handles conversation capture, AI responses, and speech output.
+- Axiom only captures microphone input for wake-word detection and uses the Windows-selected default input device.
+- Axiom does not implement a separate AI provider, STT, TTS, desktop UI inspection, or undocumented Codex API integration.
+- The shortcut chord is stored in Axiom's user-level TOML settings and must match ChatGPT Desktop Settings > Voice.
 
 ## Consequences
 
-- The first integration milestone can be designed and developed before the SP96 arrives.
-- Starting a Codex voice session may remain a user action in ChatGPT Desktop.
-- Axiom's own always-available conversation remains possible without Codex Desktop.
-- The adapter can evolve later without changing audio I/O or the conversation core.
+- The device-independent runtime can be implemented before the SP96 arrives.
+- Axiom needs the ChatGPT Desktop app running with a Codex task ready.
+- The same shortcut must be configured in both ChatGPT Desktop and Axiom.
+- ChatGPT Desktop's shortcut behavior, including background operation and duplicate-trigger semantics, must be validated on the target app version.
+- Axiom cannot know whether the external Voice session is active or ended unless the desktop app later provides a supported signal.
 
 ## Revisit when
 
-- OpenAI documents a supported external control interface for Codex Desktop voice.
-- The required user journey is clarified as controlling an existing Codex task rather than using Axiom as a standalone voice companion.
+- ChatGPT Desktop changes the user-facing Voice shortcut workflow.
+- A supported public interface becomes available for Voice lifecycle status.
+- The product's first-use scenario changes away from ChatGPT Desktop Voice.

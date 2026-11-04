@@ -7,20 +7,41 @@ import asyncio
 import sys
 
 from axiom import __version__
+from axiom.config import get_config_path, load_settings
 from axiom.integrations.codex_desktop import get_desktop_status
+from axiom.integrations.windows_shortcut import InvalidShortcut, KeyboardShortcut
 from axiom.runtime import RuntimeAdaptersPending, build_runtime
 
 
 def _show_status() -> int:
     print(f"Axiom {__version__}")
     print("Project stage: foundation")
-    print("Audio I/O: Windows default input and output; streams are not open")
-    print("Wake phrase: Hey Axiom (not active)")
+    print("Microphone: Windows default input; stream is not open")
+    print("Wake phrase: Hey Axiom (offline detector not connected)")
+    try:
+        settings = load_settings()
+    except (OSError, ValueError) as error:
+        print(f"User configuration: invalid ({error})")
+        return 1
+    if settings.codex_voice_shortcut:
+        try:
+            shortcut = KeyboardShortcut.parse(settings.codex_voice_shortcut)
+        except InvalidShortcut as error:
+            print(f"Codex voice shortcut: invalid ({error})")
+            return 1
+        print(f"Codex voice shortcut: {shortcut.display}")
+    else:
+        print(f"Codex voice shortcut: not configured ({get_config_path()})")
     return 0
 
 
 def _show_codex_status() -> int:
     status = get_desktop_status()
+    try:
+        settings = load_settings()
+    except (OSError, ValueError) as error:
+        print(f"Axiom configuration: invalid ({error})")
+        return 1
 
     if status.running is True:
         print("ChatGPT Desktop: running")
@@ -31,9 +52,18 @@ def _show_codex_status() -> int:
         if status.detail:
             print(f"Details: {status.detail}")
 
-    print("Codex voice: start or join a voice chat inside a Codex task in ChatGPT Desktop.")
-    print("Availability can depend on client rollout, account, and workspace settings.")
-    print("Axiom does not start or control the desktop voice session.")
+    if settings.codex_voice_shortcut:
+        try:
+            shortcut = KeyboardShortcut.parse(settings.codex_voice_shortcut)
+        except InvalidShortcut as error:
+            print(f"Codex voice shortcut: invalid ({error})")
+            return 1
+        print(f"Codex voice shortcut: {shortcut.display}")
+    else:
+        print(f"Codex voice shortcut: not configured ({get_config_path()})")
+    print("Set the same shortcut in ChatGPT Desktop Settings > Voice.")
+    print("Open a Codex task before triggering Voice with the wake phrase.")
+    print("Codex handles conversation capture and speech output.")
     return 0 if status.running is not None else 1
 
 
@@ -63,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("status", help="Show Axiom runtime status.")
-    commands.add_parser("codex", help="Show Codex Desktop voice handoff status.")
+    commands.add_parser("codex", help="Show Codex Desktop Voice trigger readiness.")
     commands.add_parser("run", help="Run Axiom as a resident user-session process.")
     return parser
 

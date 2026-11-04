@@ -1,39 +1,33 @@
-"""Device-independent resident runtime orchestration."""
+"""Device-independent resident wake-word runtime orchestration."""
 
 from __future__ import annotations
 
 import asyncio
-from collections import deque
 from collections.abc import AsyncIterator
 
-from axiom.audio import AudioFrame, AudioIO
+from axiom.audio import AudioFrame, AudioInput
+from axiom.integrations.codex_desktop import VoiceShortcut
 from axiom.runtime.state import RuntimeState, RuntimeStateMachine
-from axiom.voice.session import VoiceSession
 from axiom.wakeword.engine import WakeWordEngine
 
 
 class AxiomRuntime:
-    """Run the wake-listen and conversation state loop.
+    """Listen locally for the wake phrase and trigger Codex Desktop Voice.
 
-    Concrete audio, wake-word, and voice-session adapters are injected later.
-    The runtime waits asynchronously for each audio frame; it does not poll in
-    a busy loop.
+    Codex owns the conversation audio after the configured shortcut is sent.
+    The runtime awaits each input frame and does not poll in a busy loop.
     """
 
     def __init__(
         self,
         *,
-        audio: AudioIO,
+        audio: AudioInput,
         wakeword: WakeWordEngine,
-        voice_session: VoiceSession,
-        pre_roll_frames: int = 25,
+        voice_shortcut: VoiceShortcut,
     ) -> None:
-        if pre_roll_frames < 0:
-            raise ValueError("pre_roll_frames cannot be negative")
         self.audio = audio
         self.wakeword = wakeword
-        self.voice_session = voice_session
-        self.pre_roll_frames = pre_roll_frames
+        self.voice_shortcut = voice_shortcut
         self.state = RuntimeStateMachine()
         self._run_task: asyncio.Task[None] | None = None
 
@@ -51,7 +45,6 @@ class AxiomRuntime:
             async with self.audio:
                 self.state.transition(RuntimeState.WAITING_FOR_WAKEWORD)
                 frames: AsyncIterator[AudioFrame] = self.audio.frames().__aiter__()
-                pre_roll: deque[AudioFrame] = deque(maxlen=self.pre_roll_frames)
 
                 while True:
                     try:
@@ -59,21 +52,15 @@ class AxiomRuntime:
                     except StopAsyncIteration:
                         break
 
-                    pre_roll.append(frame)
                     if not self.wakeword.process_frame(frame):
                         continue
 
-                    self.state.transition(RuntimeState.CONVERSING)
+                    self.state.transition(RuntimeState.TRIGGERING_CODEX_VOICE)
                     try:
-                        await self.voice_session.run_turn(
-                            input_frames=frames,
-                            output=self.audio,
-                            pre_roll=tuple(pre_roll),
-                        )
+                        self.voice_shortcut.trigger()
                     finally:
                         self.wakeword.reset()
 
-                    pre_roll.clear()
                     self.state.transition(RuntimeState.WAITING_FOR_WAKEWORD)
         finally:
             if self.state.state != RuntimeState.STOPPING:
@@ -100,6 +87,7 @@ class RuntimeAdaptersPending(RuntimeError):
 def build_runtime() -> AxiomRuntime:
     """Create the configured runtime once concrete adapters are available."""
     raise RuntimeAdaptersPending(
-        "Axiom's runtime structure is ready, but audio, wake-word, and voice "
-        "adapters are not connected yet."
+        "Axiom's runtime structure is ready, but the Windows microphone and "
+        "offline wake-word adapters are not connected yet. Configure the "
+        "Codex voice shortcut in the user settings before running."
     )

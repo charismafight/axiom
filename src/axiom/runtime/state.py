@@ -9,7 +9,7 @@ class RuntimeState(StrEnum):
     STOPPED = "stopped"
     STARTING = "starting"
     WAITING_FOR_WAKEWORD = "waiting_for_wakeword"
-    CONVERSING = "conversing"
+    TRIGGERING_CODEX_VOICE = "triggering_codex_voice"
     STOPPING = "stopping"
 
 
@@ -19,9 +19,9 @@ _ALLOWED_TRANSITIONS: dict[RuntimeState, frozenset[RuntimeState]] = {
         {RuntimeState.WAITING_FOR_WAKEWORD, RuntimeState.STOPPING}
     ),
     RuntimeState.WAITING_FOR_WAKEWORD: frozenset(
-        {RuntimeState.CONVERSING, RuntimeState.STOPPING}
+        {RuntimeState.TRIGGERING_CODEX_VOICE, RuntimeState.STOPPING}
     ),
-    RuntimeState.CONVERSING: frozenset(
+    RuntimeState.TRIGGERING_CODEX_VOICE: frozenset(
         {RuntimeState.WAITING_FOR_WAKEWORD, RuntimeState.STOPPING}
     ),
     RuntimeState.STOPPING: frozenset({RuntimeState.STOPPED}),

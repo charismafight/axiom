@@ -1,4 +1,4 @@
-"""Axiom application lifecycle and session coordination."""
+"""Axiom application lifecycle and wake-word coordination."""
 
 from axiom.runtime.app import AxiomRuntime, RuntimeAdaptersPending
 from axiom.runtime.state import InvalidStateTransition, RuntimeState, RuntimeStateMachine

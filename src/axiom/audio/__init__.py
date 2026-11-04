@@ -1,5 +1,5 @@
-"""Audio frame contracts for the Windows-default audio backend."""
+"""Microphone input contracts for the Windows-default audio backend."""
 
-from axiom.audio.io import AudioFrame, AudioIO
+from axiom.audio.io import AudioFrame, AudioInput
 
-__all__ = ["AudioFrame", "AudioIO"]
+__all__ = ["AudioFrame", "AudioInput"]

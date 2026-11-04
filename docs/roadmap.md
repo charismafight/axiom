@@ -5,56 +5,57 @@
 ## Stage 0: Product and integration design
 
 - Confirm the product identity, first-use scenario, and privacy defaults.
-- Define the boundary between Axiom's own voice session and Codex Desktop voice.
-- Document device assumptions without relying on attached production hardware.
+- Define the offline wake-word to ChatGPT Desktop Voice shortcut flow.
+- Document Windows device and process assumptions.
 
-**Exit criteria:** Architecture boundaries and unresolved decisions are visible and agreed.
+**Exit criteria:** Axiom detects a local wake phrase and triggers the Voice shortcut configured for a Codex task. ChatGPT Desktop owns the conversation audio and AI interaction.
 
 ## Stage 1: Python package foundation
 
 - Create the `axiom` package and console entry point.
-- Add configuration loading and structured diagnostics.
-- Keep imports side-effect free and make device/provider modules replaceable.
-- Add a Codex Desktop status and native voice handoff command.
-- Add the runtime state machine, async audio contracts, and Windows launcher script.
+- Add user-level TOML configuration for the Codex Voice shortcut.
+- Keep imports side-effect free and audio, wake-word, and shortcut adapters replaceable.
+- Add Codex Desktop process status and a Windows keyboard shortcut sender.
+- Add the async wake-word runtime and the per-user Windows launcher script.
 
-**Exit criteria:** The device-independent wake/conversation flow is defined, and `axiom run` reports missing adapters without opening audio or keeping an empty process alive.
+**Exit criteria:** The device-independent wake/shortcut flow is defined. `axiom run` reports missing microphone and wake-word adapters without opening audio or keeping an empty process alive.
 
-## Stage 2: Windows-default audio backend
+## Stage 2: Windows microphone and offline wake word
 
-- Implement the `AudioIO` contract using Windows-selected default input and output.
+- Select an offline wake-word engine and confirm its license and operating requirements.
+- Implement microphone capture from the Windows-selected default input.
 - Bridge audio callbacks into the async frame iterator safely.
-- Keep input and output stream status separate, while leaving device choice to Windows Sound Settings.
-- Validate capture, playback, reconnect, and default-device changes after the SP96 arrives and is selected in Windows.
+- Feed frames to the local wake-word detector without saving them.
+- Validate wake detection and microphone error recovery after the SP96 arrives and is selected in Windows.
 
-**Exit criteria:** On the target machine, Axiom uses the Windows-selected default input and output without a device inventory or selection flow, and recovers cleanly when those streams become unavailable.
+**Exit criteria:** On the target machine, Axiom detects `Hey Axiom` locally and offline using the Windows default microphone, without a device inventory or selection flow.
 
-## Stage 3: Codex Desktop voice handoff
+## Stage 3: ChatGPT Desktop Voice shortcut
 
-- Detect whether ChatGPT Desktop is running where practical.
-- Report that native voice must be started inside a Codex task unless a supported external interface is documented.
-- Verify account/workspace rollout and task behavior manually on the target installation.
-- Keep this adapter independent from the Axiom voice provider.
+- Configure the same keyboard chord in ChatGPT Desktop Settings > Voice and Axiom's TOML settings.
+- Verify the shortcut starts Voice in an open Codex task.
+- Check whether the shortcut works while ChatGPT Desktop is in the background.
+- Check duplicate detection behavior while Voice is active.
+- Handle unavailable app, missing shortcut, and invalid shortcut configurations clearly.
 
-**Exit criteria:** The product gives accurate readiness guidance and does not depend on undocumented UI automation.
+**Exit criteria:** A local wake phrase reliably triggers the configured Codex Voice shortcut on the target installation.
 
-## Stage 4: Axiom voice companion
+## Stage 4: Windows sign-in and long-running behavior
 
-- Add an explicit foreground capture mode before enabling always-on wake-word listening.
-- Select and integrate a local wake-word engine for `Hey Axiom`.
-- Add a real-time voice provider, interruption handling, spoken responses, and clear listening/speaking states.
-- Exercise the full audio path with the SP96 on the target machine.
+- Validate the resident process under the signed-in Windows user session.
+- Add optional per-user startup registration only after target hardware and shortcut validation.
+- Confirm graceful stop, restart, logging, and recovery from microphone disconnection.
 
-**Exit criteria:** Axiom can complete a private, interruptible spoken English-practice session and can stop listening immediately on user request.
+**Exit criteria:** Axiom starts and stops predictably in the intended user's session and recovers from expected device failures.
 
-## Stage 5: Home assistant capabilities
+## Stage 5: Future capabilities
 
-- Add capability modules behind explicit permission boundaries.
+- Add capabilities behind explicit permission boundaries.
 - Add durable preferences only after choosing a storage and deletion model.
-- Add integrations one at a time with visible status and user-controlled access.
+- Revisit a broader home-assistant role when the first use case is stable.
 
-**Exit criteria:** New capabilities do not couple device capture, wake-word detection, or the conversation provider to a single service.
+**Exit criteria:** New capabilities do not couple local wake detection to a single desktop application.
 
 ## Release principle
 
-Do not label the application production-ready until audio behavior, permissions, error handling, and long-running reliability have been checked on the actual target machine and hardware.
+Do not label the application production-ready until wake detection, shortcut behavior, permissions, error handling, and long-running reliability have been checked on the actual target machine and hardware.

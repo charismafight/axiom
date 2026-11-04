@@ -7,12 +7,21 @@ import platform
 import shutil
 import subprocess
 from dataclasses import dataclass
+from typing import Protocol
 
 
 @dataclass(frozen=True)
 class DesktopStatus:
     running: bool | None
     detail: str | None = None
+
+
+class VoiceShortcut(Protocol):
+    """Trigger the user-configured ChatGPT Desktop voice shortcut."""
+
+    def trigger(self) -> None:
+        """Send the configured shortcut through the system input stream."""
+        ...
 
 
 def _windows_status() -> DesktopStatus:
