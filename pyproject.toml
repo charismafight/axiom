@@ -11,6 +11,9 @@ license = "MIT"
 requires-python = ">=3.12"
 dependencies = []
 
+[project.optional-dependencies]
+wakeword = ["openwakeword==0.6.0"]
+
 [project.scripts]
 axiom = "axiom.cli:main"
 

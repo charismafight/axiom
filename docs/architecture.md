@@ -56,16 +56,16 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 | Component | Responsibility | Initial boundary |
 | --- | --- | --- |
 | CLI | Show local status and Codex Desktop readiness | Never opens audio or sends a shortcut during status checks |
-| Configuration | Read the user-level shortcut setting | No AI credentials or device names |
+| Configuration | Read the user-level shortcut, wake-word model, threshold, and patience settings | No AI credentials or device names |
 | Audio input | Yield microphone frames from the Windows default input | Interface only until microphone integration |
-| Wake-word engine | Detect `Hey Axiom` locally and offline | Interface only until engine selection and hardware integration |
+| Wake-word engine | Detect `Hey Axiom` locally and offline | openWakeWord adapter accepts an explicit custom ONNX model; no built-in pretrained model is selected |
 | Runtime | Wait for frames and trigger the shortcut on a wake match | Async state loop is implemented |
 | Codex Desktop integration | Send the configured keyboard chord and report app readiness | Uses Win32 `SendInput`; does not inspect or manipulate desktop UI |
 | ChatGPT Desktop | Handle conversation capture, AI responses, and speech output | User-configured Voice shortcut in a Codex task |
 
 ## Audio input
 
-The eventual audio backend opens only the Windows-selected default microphone input. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
+The eventual audio backend opens only the Windows-selected default microphone input and yields mono, signed 16-bit little-endian PCM frames at 16 kHz. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
 
 ChatGPT Desktop independently uses the microphone and speaker selected by Windows for its Voice session. Axiom has no output audio interface. The Yealink SP96 is planned for end-to-end validation after it arrives, but Axiom does not depend on its name or model.
 
@@ -82,20 +82,29 @@ The configuration key is `codex.voice_shortcut`, for example:
 voice_shortcut = "CTRL+SHIFT+V"
 ```
 
-The example is illustrative; it is not a default. Axiom sends the key chord using the Windows keyboard input API. The current documentation does not specify whether the Voice shortcut is global or requires ChatGPT Desktop to be foregrounded. The target app/version must be checked manually before relying on background activation. Axiom does not bring ChatGPT Desktop to the foreground, identify the active task, or detect whether Voice is already active.
+The example is illustrative; it is not a default. Axiom sends the key chord using the Windows keyboard input API. Axiom does not bring ChatGPT Desktop to the foreground, identify the active task, or detect whether Voice is already active. The user will check shortcut behavior with ChatGPT Desktop foregrounded and in the background during final end-to-end validation after the product is assembled.
 
 ChatGPT Desktop must be running with a Codex task ready. Axiom's status command can report process state and shortcut configuration, but does not change either one. Availability of Voice may depend on account, workspace, and app rollout.
 
 ## Configuration
 
-The optional user-level TOML file is located at `%APPDATA%\Axiom\config.toml` on Windows. Axiom does not create it automatically. Use the exact shortcut saved in ChatGPT Desktop Settings > Voice:
+The optional user-level TOML file is located at `%APPDATA%\Axiom\config.toml` on Windows. Axiom does not create it automatically. Use the exact shortcut saved in ChatGPT Desktop Settings > Voice and provide a custom ONNX model trained for `Hey Axiom`:
 
 ```toml
 [codex]
 voice_shortcut = "CTRL+SHIFT+V"
+
+[wakeword]
+model_path = '%APPDATA%\Axiom\models\hey_axiom.onnx'
+threshold = 0.5
+patience = 2
 ```
 
-Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent.
+The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapter loads only that explicit model file. It does not load openWakeWord's built-in pretrained wake-word models; those model artifacts have a separate CC BY-NC-SA license even though the runtime code is Apache-2.0. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license). The user must provide a custom model and check the rights that apply to its training data and output.
+
+The openWakeWord runtime also requires shared ONNX feature-extractor assets. Axiom does not provision them yet. The eventual setup flow must install only those shared assets and must not invoke the upstream no-argument `download_models()` helper, which also downloads the separately licensed pre-trained wake-word classifiers.
+
+Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent. Wake-word `threshold` must be between 0 and 1; `patience` is the number of consecutive 80 ms frames required above the threshold.
 
 ## Windows process model
 
@@ -113,7 +122,8 @@ src/axiom/
 ├── audio/
 │   └── io.py
 ├── wakeword/
-│   └── engine.py
+│   ├── engine.py
+│   └── openwakeword_engine.py
 ├── integrations/
 │   ├── codex_desktop.py
 │   └── windows_shortcut.py
@@ -126,7 +136,6 @@ src/axiom/
 
 ## Open implementation details
 
-1. Select a local wake-word engine and confirm its license and offline behavior.
+1. Generate or obtain a custom `Hey Axiom` ONNX model and verify its license and detection quality.
 2. Integrate the Windows default microphone backend after the SP96 arrives.
-3. Verify the configured Voice shortcut's foreground/background behavior and duplicate-trigger semantics on the target ChatGPT Desktop version.
-4. Confirm the app rollout, account, and workspace provide Voice in Codex.
+3. Confirm the app rollout, account, and workspace provide Voice in Codex.

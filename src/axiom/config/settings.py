@@ -11,9 +11,12 @@ from pathlib import Path
 
 @dataclass(frozen=True, slots=True)
 class AxiomSettings:
-    """Settings that connect local wake detection to Codex Desktop."""
+    """Settings for offline wake detection and Codex Desktop Voice."""
 
     codex_voice_shortcut: str | None = None
+    wakeword_model_path: Path | None = None
+    wakeword_threshold: float = 0.5
+    wakeword_patience: int = 2
 
 
 def get_config_path() -> Path:
@@ -31,11 +34,11 @@ def get_config_path() -> Path:
 def load_settings(path: Path | None = None) -> AxiomSettings:
     """Load settings, returning defaults when no user config exists."""
     config_path = path or get_config_path()
-    if not config_path.exists():
-        return AxiomSettings()
-
-    with config_path.open("rb") as config_file:
-        data = tomllib.load(config_file)
+    if config_path.exists():
+        with config_path.open("rb") as config_file:
+            data = tomllib.load(config_file)
+    else:
+        data = {}
 
     codex = data.get("codex", {})
     if not isinstance(codex, dict):
@@ -45,4 +48,38 @@ def load_settings(path: Path | None = None) -> AxiomSettings:
     if shortcut is not None and (not isinstance(shortcut, str) or not shortcut.strip()):
         raise ValueError("codex.voice_shortcut must be a non-empty string.")
 
-    return AxiomSettings(codex_voice_shortcut=shortcut.strip() if shortcut else None)
+    wakeword = data.get("wakeword", {})
+    if not isinstance(wakeword, dict):
+        raise ValueError("The [wakeword] configuration section must be a table.")
+
+    model_path_value = wakeword.get("model_path")
+    if model_path_value is not None and (
+        not isinstance(model_path_value, str) or not model_path_value.strip()
+    ):
+        raise ValueError("wakeword.model_path must be a non-empty string.")
+    if model_path_value:
+        expanded_path = os.path.expandvars(os.path.expanduser(model_path_value.strip()))
+        model_path = Path(expanded_path)
+        if not model_path.is_absolute():
+            model_path = config_path.parent / model_path
+    else:
+        model_path = config_path.parent / "models" / "hey_axiom.onnx"
+
+    threshold = wakeword.get("threshold", 0.5)
+    if (
+        isinstance(threshold, bool)
+        or not isinstance(threshold, (int, float))
+        or not 0.0 <= threshold <= 1.0
+    ):
+        raise ValueError("wakeword.threshold must be a number between 0 and 1.")
+
+    patience = wakeword.get("patience", 2)
+    if isinstance(patience, bool) or not isinstance(patience, int) or patience < 1:
+        raise ValueError("wakeword.patience must be a positive integer.")
+
+    return AxiomSettings(
+        codex_voice_shortcut=shortcut.strip() if shortcut else None,
+        wakeword_model_path=model_path,
+        wakeword_threshold=float(threshold),
+        wakeword_patience=patience,
+    )

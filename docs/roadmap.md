@@ -13,16 +13,18 @@
 ## Stage 1: Python package foundation
 
 - Create the `axiom` package and console entry point.
-- Add user-level TOML configuration for the Codex Voice shortcut.
+- Add user-level TOML configuration for the Codex Voice shortcut and wake-word model.
 - Keep imports side-effect free and audio, wake-word, and shortcut adapters replaceable.
+- Add the openWakeWord adapter with an explicit custom ONNX model path.
 - Add Codex Desktop process status and a Windows keyboard shortcut sender.
 - Add the async wake-word runtime and the per-user Windows launcher script.
 
-**Exit criteria:** The device-independent wake/shortcut flow is defined. `axiom run` reports missing microphone and wake-word adapters without opening audio or keeping an empty process alive.
+**Exit criteria:** The device-independent wake/shortcut flow and wake-word adapter are defined. `axiom run` reports the missing microphone backend or custom model without opening audio or keeping an empty process alive.
 
 ## Stage 2: Windows microphone and offline wake word
 
-- Select an offline wake-word engine and confirm its license and operating requirements.
+- Supply a custom `Hey Axiom` ONNX model and confirm its license and operating requirements.
+- Provision openWakeWord's shared ONNX feature-extractor assets without downloading its included pre-trained wake-word classifiers.
 - Implement microphone capture from the Windows-selected default input.
 - Bridge audio callbacks into the async frame iterator safely.
 - Feed frames to the local wake-word detector without saving them.
@@ -33,16 +35,14 @@
 ## Stage 3: ChatGPT Desktop Voice shortcut
 
 - Configure the same keyboard chord in ChatGPT Desktop Settings > Voice and Axiom's TOML settings.
-- Verify the shortcut starts Voice in an open Codex task.
-- Check whether the shortcut works while ChatGPT Desktop is in the background.
-- Check duplicate detection behavior while Voice is active.
 - Handle unavailable app, missing shortcut, and invalid shortcut configurations clearly.
 
-**Exit criteria:** A local wake phrase reliably triggers the configured Codex Voice shortcut on the target installation.
+**Exit criteria:** The runtime sends the configured chord after a wake-word event, and the CLI reports missing app or shortcut configuration.
 
 ## Stage 4: Windows sign-in and long-running behavior
 
 - Validate the resident process under the signed-in Windows user session.
+- Perform final end-to-end wake-word and shortcut checks on the target machine, including ChatGPT Desktop foreground/background behavior and duplicate detections.
 - Add optional per-user startup registration only after target hardware and shortcut validation.
 - Confirm graceful stop, restart, logging, and recovery from microphone disconnection.
 

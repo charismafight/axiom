@@ -6,6 +6,7 @@ import asyncio
 from collections.abc import AsyncIterator
 
 from axiom.audio import AudioFrame, AudioInput
+from axiom.config import load_settings
 from axiom.integrations.codex_desktop import VoiceShortcut
 from axiom.runtime.state import RuntimeState, RuntimeStateMachine
 from axiom.wakeword.engine import WakeWordEngine
@@ -86,8 +87,25 @@ class RuntimeAdaptersPending(RuntimeError):
 
 def build_runtime() -> AxiomRuntime:
     """Create the configured runtime once concrete adapters are available."""
+    try:
+        settings = load_settings()
+    except (OSError, ValueError) as error:
+        raise RuntimeAdaptersPending(
+            f"Axiom user configuration is invalid: {error}"
+        ) from error
+
+    pending = ["the Windows default microphone adapter is not connected"]
+    if (
+        settings.wakeword_model_path is None
+        or not settings.wakeword_model_path.is_file()
+    ):
+        pending.append(
+            "the custom Hey Axiom ONNX model is missing at "
+            f"{settings.wakeword_model_path}"
+        )
+    if not settings.codex_voice_shortcut:
+        pending.append("the Codex Voice shortcut is not configured")
+
     raise RuntimeAdaptersPending(
-        "Axiom's runtime structure is ready, but the Windows microphone and "
-        "offline wake-word adapters are not connected yet. Configure the "
-        "Codex voice shortcut in the user settings before running."
+        "Axiom cannot start yet: " + "; ".join(pending) + "."
     )

@@ -13,7 +13,7 @@ from typing import Protocol
 
 @dataclass(frozen=True, slots=True)
 class AudioFrame:
-    """One raw PCM frame delivered by an audio input backend."""
+    """One 16 kHz, mono, signed 16-bit little-endian PCM audio frame."""
 
     pcm: bytes
     sample_rate: int
@@ -33,5 +33,5 @@ class AudioInput(Protocol):
         ...
 
     def frames(self) -> AsyncIterator[AudioFrame]:
-        """Yield microphone frames until the stream closes."""
+        """Yield canonical PCM frames until the microphone stream closes."""
         ...

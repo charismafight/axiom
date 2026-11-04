@@ -17,12 +17,21 @@ def _show_status() -> int:
     print(f"Axiom {__version__}")
     print("Project stage: foundation")
     print("Microphone: Windows default input; stream is not open")
-    print("Wake phrase: Hey Axiom (offline detector not connected)")
     try:
         settings = load_settings()
     except (OSError, ValueError) as error:
         print(f"User configuration: invalid ({error})")
         return 1
+    if settings.wakeword_model_path and settings.wakeword_model_path.is_file():
+        print(
+            "Wake phrase: Hey Axiom (custom ONNX model: "
+            f"{settings.wakeword_model_path})"
+        )
+    else:
+        print(
+            "Wake phrase: Hey Axiom (custom ONNX model missing: "
+            f"{settings.wakeword_model_path})"
+        )
     if settings.codex_voice_shortcut:
         try:
             shortcut = KeyboardShortcut.parse(settings.codex_voice_shortcut)
