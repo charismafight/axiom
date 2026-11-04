@@ -21,7 +21,8 @@
 
 ## Stage 2: Windows-default audio I/O
 
-- Open the input and output devices selected as Windows defaults.
+- Provide raw input and output stream factories that use the Windows defaults through PortAudio and `sounddevice`.
+- Connect audio callbacks to the session runtime.
 - Keep input and output stream status separate, while leaving device choice to Windows Sound Settings.
 - Report stream-open failures with a direct instruction to check Windows Sound Settings.
 - Validate capture, playback, reconnect, and default-device changes after the SP96 arrives and is selected in Windows.

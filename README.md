@@ -18,9 +18,9 @@ Project files, source code, comments, and user-facing strings are written in Eng
 
 ## Current stage
 
-This repository contains the initial Python package foundation and product design. The next implementation milestones are:
+This repository contains the initial Python package foundation, default audio stream adapter, and product design. The next implementation milestones are:
 
-1. Audio input and output through the devices selected as Windows defaults.
+1. Connect default audio streams to the session runtime.
 2. End-to-end validation with the SP96 after it arrives.
 3. A clearly bounded integration with voice in ChatGPT Desktop's Codex tasks.
 
@@ -58,4 +58,4 @@ axiom/
         └── voice/
 ```
 
-The package currently provides status and Codex Desktop handoff commands. Audio capture, wake-word detection, and real-time conversation are planned work.
+The package currently provides status and Codex Desktop handoff commands, plus a raw audio stream adapter that is not started by the CLI. Wake-word detection and real-time conversation are planned work.

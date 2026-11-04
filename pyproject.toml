@@ -9,7 +9,7 @@ description = "Your AI Conversation Companion"
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["sounddevice>=0.5.6,<0.6"]
 
 [project.scripts]
 axiom = "axiom.cli:main"

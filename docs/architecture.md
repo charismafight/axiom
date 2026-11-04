@@ -66,7 +66,7 @@ The first project milestone establishes the Python package, uses the input and o
 | --- | --- | --- |
 | CLI and local control | Show status and run explicit diagnostics | No background capture by default |
 | Configuration | Store runtime options and provider preferences | User-level configuration; secrets stay out of the repository |
-| Audio I/O | Open Windows-selected default input and output streams | No device inventory, matching, or selection UI |
+| Audio I/O | Open Windows-selected default input and output streams using PortAudio through `sounddevice` | Raw 48 kHz mono PCM; no device inventory, matching, or selection UI |
 | Audio capture | Acquire audio frames from the system-selected input | Added after backend and hardware validation |
 | Wake-word adapter | Detect `Hey Axiom` locally | Engine choice remains open |
 | Session manager | Coordinate listening, conversation, interruption, and shutdown | Must own a clear state machine |
@@ -76,9 +76,9 @@ The first project milestone establishes the Python package, uses the input and o
 
 ## Audio I/O design
 
-Windows Sound Settings owns microphone and speaker selection. Axiom opens the system-selected default input and output streams and does not enumerate endpoints, match the string `SP96`, provide device-selection controls, or change system audio settings.
+Windows Sound Settings owns microphone and speaker selection. Axiom opens the system-selected default input and output streams through PortAudio via `sounddevice`, passing `device=None`. It does not enumerate endpoints, match the string `SP96`, provide device-selection controls, or change system audio settings.
 
-Keep input and output stream status separate so Axiom can report which default stream failed to open. On failure, direct the user to Windows Sound Settings to choose or repair the default device. The exact Windows audio backend must be selected and validated during implementation; it must follow the operating-system defaults rather than introduce a second device-selection policy.
+The initial stream format is 48 kHz, mono, signed 16-bit PCM. Keep input and output stream status separate so Axiom can report which default stream failed to open. On failure, direct the user to Windows Sound Settings to choose or repair the default device. Validate that PortAudio follows Windows defaults and that the stream format works with the target device after the SP96 arrives.
 
 The Yealink SP96 is the planned speakerphone for end-to-end validation after it arrives. Its product description lists USB, Bluetooth, and USB-adapter connectivity: [Yealink SP96](https://www.yealink.com/en/product-detail/speakerphone-sp96). Axiom does not depend on the SP96 model name or its endpoint names.
 
@@ -116,9 +116,7 @@ src/axiom/
 ├── cli/
 ├── config/
 ├── audio/
-│   ├── input.py
-│   ├── output.py
-│   └── backend.py
+│   └── io.py
 ├── wakeword/
 ├── voice/
 ├── integrations/
