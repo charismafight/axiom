@@ -1,5 +1,5 @@
-"""Audio input and output through system-selected default devices."""
+"""Audio frame contracts for the Windows-default audio backend."""
 
-from axiom.audio.io import AudioBackendUnavailable, AudioStreamError, DefaultAudioIO
+from axiom.audio.io import AudioFrame, AudioIO
 
-__all__ = ["AudioBackendUnavailable", "AudioStreamError", "DefaultAudioIO"]
+__all__ = ["AudioFrame", "AudioIO"]

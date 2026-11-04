@@ -16,15 +16,15 @@
 - Add configuration loading and structured diagnostics.
 - Keep imports side-effect free and make device/provider modules replaceable.
 - Add a Codex Desktop status and native voice handoff command.
+- Add the runtime state machine, async audio contracts, and Windows launcher script.
 
-**Exit criteria:** The package can be installed in a clean development environment and its CLI reports project and Codex Desktop status without opening an audio stream.
+**Exit criteria:** The device-independent wake/conversation flow is defined, and `axiom run` reports missing adapters without opening audio or keeping an empty process alive.
 
-## Stage 2: Windows-default audio I/O
+## Stage 2: Windows-default audio backend
 
-- Provide raw input and output stream factories that use the Windows defaults through PortAudio and `sounddevice`.
-- Connect audio callbacks to the session runtime.
+- Implement the `AudioIO` contract using Windows-selected default input and output.
+- Bridge audio callbacks into the async frame iterator safely.
 - Keep input and output stream status separate, while leaving device choice to Windows Sound Settings.
-- Report stream-open failures with a direct instruction to check Windows Sound Settings.
 - Validate capture, playback, reconnect, and default-device changes after the SP96 arrives and is selected in Windows.
 
 **Exit criteria:** On the target machine, Axiom uses the Windows-selected default input and output without a device inventory or selection flow, and recovers cleanly when those streams become unavailable.

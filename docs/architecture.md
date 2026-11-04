@@ -8,13 +8,13 @@
 
 Axiom is a local-first voice companion that helps a person practice spoken English through natural, real-time conversation. It starts with a local wake phrase and uses the audio input and output selected in Windows, while keeping conversation providers and future home capabilities behind replaceable interfaces.
 
-The first project milestone establishes the Python package, uses the input and output devices selected as Windows defaults, and defines how Axiom relates to voice in ChatGPT Desktop's Codex tasks. It does not assume that the SP96 is attached to the development computer.
+The first project milestone establishes the Python package, the per-user background process model, the device-independent wake/conversation loop, and the boundaries between audio, wake-word, and voice adapters. It does not assume that the SP96 is attached to the development computer.
 
 ## Goals
 
 - Use the product name Axiom and the wake phrase `Hey Axiom` consistently.
 - Let Windows Sound Settings own audio-device selection.
-- Open the system-selected default input and output streams without identifying, listing, or switching hardware devices.
+- Use the system-selected default input and output streams without identifying, listing, or switching hardware devices.
 - Keep wake-word detection, audio capture, conversation, speech output, and external integrations as separate components.
 - Keep the Codex Desktop integration behind an adapter so the conversation system does not depend on undocumented desktop behavior.
 - Keep project files, comments, and user-facing text in English.
@@ -22,7 +22,7 @@ The first project milestone establishes the Python package, uses the input and o
 
 ## Non-goals for the first milestone
 
-- Shipping a production background service before testing on the target machine.
+- Enabling automatic startup before testing on the target machine.
 - Enumerating hardware, matching SP96 endpoint names, or changing Windows audio settings.
 - Replacing ChatGPT Desktop's own voice experience or reproducing its task context.
 - Adding home-control actions, persistent conversation memory, or account integrations.
@@ -64,25 +64,36 @@ The first project milestone establishes the Python package, uses the input and o
 
 | Component | Responsibility | Initial boundary |
 | --- | --- | --- |
-| CLI and local control | Show status and run explicit diagnostics | No background capture by default |
+| CLI and local control | Show status, hand off to Codex Desktop, or launch the resident process | Importing or checking status never opens audio |
 | Configuration | Store runtime options and provider preferences | User-level configuration; secrets stay out of the repository |
-| Audio I/O | Open Windows-selected default input and output streams using PortAudio through `sounddevice` | Raw 48 kHz mono PCM; no device inventory, matching, or selection UI |
-| Audio capture | Acquire audio frames from the system-selected input | Added after backend and hardware validation |
-| Wake-word adapter | Detect `Hey Axiom` locally | Engine choice remains open |
-| Session manager | Coordinate listening, conversation, interruption, and shutdown | Must own a clear state machine |
-| Voice provider | Supply real-time speech conversation | Replaceable provider interface |
-| Codex Desktop adapter | Describe or invoke supported Codex voice entry points | No undocumented UI injection |
-| Speech output | Play assistant audio through the system-selected output | Added after end-to-end device validation |
+| Audio I/O contract | Deliver microphone frames and accept output frames | Interface only; backend waits for target-device integration |
+| Wake-word adapter | Detect `Hey Axiom` locally | Interface only; engine choice remains open |
+| Runtime | Wait for frames, switch between wake listening and conversation, close cleanly | State loop implemented; adapters injected later |
+| Voice provider | Supply a real-time spoken conversation | Interface only; provider choice remains open |
+| Codex Desktop adapter | Report app readiness and native voice handoff | No undocumented UI injection |
 
 ## Audio I/O design
 
-Windows Sound Settings owns microphone and speaker selection. Axiom opens the system-selected default input and output streams through PortAudio via `sounddevice`, passing `device=None`. It does not enumerate endpoints, match the string `SP96`, provide device-selection controls, or change system audio settings.
+Windows Sound Settings owns microphone and speaker selection. `AudioIO` is an async interface for input frames and output frames. The runtime knows only about PCM frames; the device backend that opens Windows defaults is intentionally deferred until the SP96 is available for integration.
 
-The initial stream format is 48 kHz, mono, signed 16-bit PCM. Keep input and output stream status separate so Axiom can report which default stream failed to open. On failure, direct the user to Windows Sound Settings to choose or repair the default device. Validate that PortAudio follows Windows defaults and that the stream format works with the target device after the SP96 arrives.
+The eventual backend will not enumerate endpoints, match the string `SP96`, provide device-selection controls, or change system audio settings. It will bridge audio callbacks into the async frame iterator without blocking the event loop. Audio will not be saved by default.
 
 The Yealink SP96 is the planned speakerphone for end-to-end validation after it arrives. Its product description lists USB, Bluetooth, and USB-adapter connectivity: [Yealink SP96](https://www.yealink.com/en/product-detail/speakerphone-sp96). Axiom does not depend on the SP96 model name or its endpoint names.
 
-Do not save microphone audio by default. Opening an input stream should only occur when the user starts an audio session or enables the wake-word runtime. Any future capture diagnostic should be explicit, bounded in duration, and should discard audio unless the user explicitly enables recording.
+## Windows process and async loop
+
+Run Axiom as a normal process in the signed-in user's session, optionally launched at sign-in through the Windows Startup folder or a scheduled task configured to run only while that user is logged on. Do not use a Windows Service for microphone access or user-facing voice behavior: services run in a noninteractive session and cannot directly interact with the user. See [Microsoft's Interactive Services guidance](https://learn.microsoft.com/en-us/windows/desktop/Services/interactive-services).
+
+The runtime follows this state flow:
+
+```text
+STARTING -> WAITING_FOR_WAKEWORD -> CONVERSING -> WAITING_FOR_WAKEWORD
+     \____________________________-> STOPPING -> STOPPED
+```
+
+`AxiomRuntime` awaits the next audio frame instead of polling continuously. In the waiting state it feeds frames to the local wake-word engine. On a match, it passes the same frame stream, a short pre-roll, and the output contract to the voice session. When the session returns, it resets wake-word state and resumes waiting. Cancellation exits the audio context and closes resources.
+
+The future device backend may receive callbacks on an audio thread. It must hand frames to the async runtime using a thread-safe bridge; it must not call `asyncio.Queue` methods directly from another thread. Python documents `loop.call_soon_threadsafe()` for this boundary: [asyncio multithreading guidance](https://docs.python.org/3/library/asyncio-dev.html).
 
 ## Codex Desktop voice integration
 
@@ -113,18 +124,22 @@ The configuration path and exact schema should be settled when the CLI foundatio
 src/axiom/
 ├── __init__.py
 ├── __main__.py
-├── cli/
+├── cli.py
 ├── config/
 ├── audio/
 │   └── io.py
 ├── wakeword/
+│   └── engine.py
 ├── voice/
+│   └── session.py
 ├── integrations/
-│   └── codex_desktop/
+│   └── codex_desktop.py
 └── runtime/
+    ├── app.py
+    └── state.py
 ```
 
-The public package name and console command are both `axiom`. Keep import-time behavior side-effect free: importing the package must not open a microphone, start a service, or contact a voice provider.
+The public package name and console command are both `axiom`. `axiom run` is the resident entry point. It currently exits with a clear adapter-pending message rather than starting an idle process. Keep import-time behavior side-effect free: importing the package must not open a microphone, start a background process, or contact a voice provider.
 
 ## Open design questions
 
@@ -132,4 +147,4 @@ The public package name and console command are both `axiom`. Keep import-time b
 2. If Axiom owns the session, which provider, account model, and data-retention behavior are acceptable?
 3. Which local wake-word engine and license fit the target distribution?
 4. Should Windows be the only supported platform for the first release?
-5. Should an active session reopen its streams automatically when Windows changes a default endpoint, or stop and ask the user to restart it?
+5. Should an active conversation reopen audio after Windows changes a default endpoint, or ask the user to restart the session?

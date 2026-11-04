@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
+import sys
 
 from axiom import __version__
 from axiom.integrations.codex_desktop import get_desktop_status
+from axiom.runtime import RuntimeAdaptersPending, build_runtime
 
 
 def _show_status() -> int:
@@ -34,6 +37,20 @@ def _show_codex_status() -> int:
     return 0 if status.running is not None else 1
 
 
+def _run_runtime() -> int:
+    try:
+        runtime = build_runtime()
+    except RuntimeAdaptersPending as error:
+        print(str(error), file=sys.stderr)
+        return 2
+
+    try:
+        asyncio.run(runtime.run())
+    except KeyboardInterrupt:
+        return 0
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="axiom",
@@ -47,6 +64,7 @@ def build_parser() -> argparse.ArgumentParser:
     commands = parser.add_subparsers(dest="command")
     commands.add_parser("status", help="Show Axiom runtime status.")
     commands.add_parser("codex", help="Show Codex Desktop voice handoff status.")
+    commands.add_parser("run", help="Run Axiom as a resident user-session process.")
     return parser
 
 
@@ -54,4 +72,6 @@ def main() -> int:
     args = build_parser().parse_args()
     if args.command == "codex":
         return _show_codex_status()
+    if args.command == "run":
+        return _run_runtime()
     return _show_status()
