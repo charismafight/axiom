@@ -12,6 +12,7 @@ Axiom is a local-first, always-available voice companion for spoken English prac
 - Wake phrase: `Hey Axiom`
 - Git repository and Python package: `axiom`
 - Intended project directory: `C:\Projects\Axiom`
+- License: MIT ([license text](LICENSE))
 
 Project files, source code, comments, and user-facing strings are written in English.
 
