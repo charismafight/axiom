@@ -21,3 +21,9 @@ The openWakeWord runtime is Apache-2.0, but its included pre-trained classifiers
 ## Validation
 
 Do not treat a successful ONNX load as evidence of wake-word quality. After the target microphone is available, evaluate the classifier in the intended room with varied positive pronunciations and long negative recordings. Adjust `wakeword.threshold` and `wakeword.patience` based on missed activations and false triggers. Keep these measurements with the model's provenance notes.
+
+## Local training implementation
+
+A WSL 2 workflow for this exact wake phrase is documented in [training/LOCAL_RUN.md](../training/LOCAL_RUN.md). It synthesizes phrase examples with Piper, uses MUSAN backgrounds and MIT room impulse responses, and downloads negative and validation features from the official openWakeWord feature dataset.
+
+The feature dataset is marked CC BY-NC-SA 4.0, and the MIT RIR mirror does not declare a clear license. Piper's checkpoint and voice data also have separate terms. Review all applicable terms before distributing a model trained with these inputs. The public repository includes the training scripts and source references, but no data, generated speech, or ONNX model.
