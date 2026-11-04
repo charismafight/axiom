@@ -50,7 +50,7 @@ patience = 2
 
 Use the same shortcut configured in ChatGPT Desktop; the example is not a default. The ONNX file must be a custom model for `Hey Axiom`; Axiom does not bundle an upstream pre-trained model. See the [openWakeWord custom model training guide](https://github.com/dscripka/openWakeWord#training-new-models). OpenAI documents that Voice in Work or Codex can use a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex).
 
-The openWakeWord runtime code is Apache-2.0, while its included pre-trained models have a separate non-commercial license. Axiom loads only the explicitly configured custom model and does not use or include those upstream models. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license).
+The openWakeWord runtime code is Apache-2.0, while its included pre-trained models have a separate non-commercial license. Axiom loads only the explicitly configured custom model and does not use or include those upstream models. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license) and the [Axiom custom model guide](docs/wakeword-model.md).
 
 Run `axiom prepare-wakeword` once while online to download and validate the two shared ONNX feature-extractor assets. They are stored next to the configured classifier under `openwakeword`. The command downloads only these shared assets; it does not fetch upstream pre-trained wake-word classifiers. Wake detection itself performs local inference and does not need a network connection.
 
@@ -60,6 +60,7 @@ Run `axiom prepare-wakeword` once while online to download and validate the two 
 
 - [Architecture](docs/architecture.md)
 - [Roadmap](docs/roadmap.md)
+- [Custom wake-word model](docs/wakeword-model.md)
 - [Codex Desktop voice shortcut](docs/decisions/0001-codex-desktop-voice-boundary.md)
 - [Windows process model](docs/decisions/0003-windows-user-session-runtime.md)
 - [Offline wake-word engine](docs/decisions/0004-offline-wakeword-engine.md)

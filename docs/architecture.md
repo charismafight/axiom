@@ -104,7 +104,7 @@ The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapt
 
 Run `axiom prepare-wakeword` once while online to install and validate the shared ONNX feature-extractor assets. They are stored in an `openwakeword` directory beside the configured classifier. Wake detection loads those local assets and the explicit custom classifier; inference does not need a network connection.
 
-Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent. Wake-word `threshold` must be between 0 and 1; `patience` is the number of consecutive 80 ms frames required above the threshold.
+Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent. Wake-word `threshold` must be between 0 and 1; the Axiom adapter triggers after `patience` consecutive 80 ms model scores meet or exceed that threshold.
 
 ## Windows process model
 

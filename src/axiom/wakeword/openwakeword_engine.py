@@ -47,6 +47,7 @@ class OpenWakeWordEngine:
             ) from error
         self._numpy = np
         self._pending_pcm = bytearray()
+        self._consecutive_hits = 0
 
         if model is None:
             feature_directory = get_feature_assets_dir(model_path)
@@ -102,22 +103,23 @@ class OpenWakeWordEngine:
             samples = self._numpy.frombuffer(pcm, dtype="<i2")
             predictions = self._model.predict(
                 samples,
-                threshold={self.model_key: self.threshold},
-                patience={self.model_key: self.patience},
             )
             if self.model_key not in predictions:
                 raise WakeWordModelError(
                     f"The wake-word model did not return the expected score key "
                     f"'{self.model_key}'."
                 )
-            detected = detected or (
-                float(predictions[self.model_key]) >= self.threshold
-            )
+            if float(predictions[self.model_key]) >= self.threshold:
+                self._consecutive_hits += 1
+            else:
+                self._consecutive_hits = 0
+            detected = detected or self._consecutive_hits >= self.patience
         return detected
 
     def reset(self) -> None:
         """Clear the model's rolling audio and prediction buffers."""
         self._pending_pcm.clear()
+        self._consecutive_hits = 0
         self._model.reset()
 
 

@@ -9,6 +9,7 @@ from axiom.audio import AudioFrame, AudioInput
 from axiom.config import load_settings
 from axiom.integrations.codex_desktop import VoiceShortcut
 from axiom.runtime.state import RuntimeState, RuntimeStateMachine
+from axiom.wakeword.assets import get_feature_assets_dir
 from axiom.wakeword.engine import WakeWordEngine
 
 
@@ -103,6 +104,18 @@ def build_runtime() -> AxiomRuntime:
             "the custom Hey Axiom ONNX model is missing at "
             f"{settings.wakeword_model_path}"
         )
+    else:
+        feature_directory = get_feature_assets_dir(settings.wakeword_model_path)
+        missing_features = [
+            name
+            for name in ("melspectrogram.onnx", "embedding_model.onnx")
+            if not (feature_directory / name).is_file()
+        ]
+        if missing_features:
+            pending.append(
+                "shared wake-word feature assets are missing "
+                f"({', '.join(missing_features)}); run axiom prepare-wakeword"
+            )
     if not settings.codex_voice_shortcut:
         pending.append("the Codex Voice shortcut is not configured")
 

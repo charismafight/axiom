@@ -11,7 +11,11 @@ from axiom.config import get_config_path, load_settings
 from axiom.integrations.codex_desktop import get_desktop_status
 from axiom.integrations.windows_shortcut import InvalidShortcut, KeyboardShortcut
 from axiom.runtime import RuntimeAdaptersPending, build_runtime
-from axiom.wakeword.assets import WakeWordAssetsError, prepare_feature_assets
+from axiom.wakeword.assets import (
+    WakeWordAssetsError,
+    get_feature_assets_dir,
+    prepare_feature_assets,
+)
 
 
 def _show_status() -> int:
@@ -33,6 +37,20 @@ def _show_status() -> int:
             "Wake phrase: Hey Axiom (custom ONNX model missing: "
             f"{settings.wakeword_model_path})"
         )
+    if settings.wakeword_model_path:
+        feature_directory = get_feature_assets_dir(settings.wakeword_model_path)
+        missing_features = [
+            name
+            for name in ("melspectrogram.onnx", "embedding_model.onnx")
+            if not (feature_directory / name).is_file()
+        ]
+        if missing_features:
+            print(
+                "Wake-word feature assets: missing "
+                f"({', '.join(missing_features)}; run axiom prepare-wakeword)"
+            )
+        else:
+            print("Wake-word feature assets: ready")
     if settings.codex_voice_shortcut:
         try:
             shortcut = KeyboardShortcut.parse(settings.codex_voice_shortcut)

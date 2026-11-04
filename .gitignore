@@ -8,3 +8,8 @@ venv/
 .env
 .env.*
 !.env.example
+
+# Local wake-word models and generated training data
+models/
+training_data/
+generated_clips/
