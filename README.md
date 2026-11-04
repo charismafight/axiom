@@ -32,6 +32,7 @@ python -m venv .venv
 python -m pip install -e ".[wakeword]"
 axiom status
 axiom codex
+axiom prepare-wakeword
 .\scripts\start_axiom.ps1
 ```
 
@@ -51,7 +52,7 @@ Use the same shortcut configured in ChatGPT Desktop; the example is not a defaul
 
 The openWakeWord runtime code is Apache-2.0, while its included pre-trained models have a separate non-commercial license. Axiom loads only the explicitly configured custom model and does not use or include those upstream models. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license).
 
-openWakeWord also requires shared ONNX feature-extractor assets. Axiom does not provision these yet; the follow-up setup step must add only the shared feature assets. Do not run the upstream no-argument `download_models()` helper, which downloads its pre-trained wake-word classifiers as well.
+Run `axiom prepare-wakeword` once while online to download and validate the two shared ONNX feature-extractor assets. They are stored next to the configured classifier under `openwakeword`. The command downloads only these shared assets; it does not fetch upstream pre-trained wake-word classifiers. Wake detection itself performs local inference and does not need a network connection.
 
 `scripts/start_axiom.ps1` invokes `python -m axiom run`. The resident entry point currently reports that runtime adapters are pending rather than leaving an idle process running.
 

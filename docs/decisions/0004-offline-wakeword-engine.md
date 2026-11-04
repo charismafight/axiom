@@ -28,7 +28,7 @@ The project is public under MIT. Wake-word runtime code, model assets, custom-mo
 ## Consequences
 
 - Axiom needs a custom `Hey Axiom` ONNX model before wake detection can run.
-- The shared ONNX feature-extractor assets required by openWakeWord still need a controlled setup path. Do not use the upstream default model downloader because it also downloads the separately licensed pre-trained wake-word classifiers.
+- The `axiom prepare-wakeword` command downloads and validates only the shared ONNX feature-extractor assets. It does not use the upstream default downloader, which also downloads the separately licensed pre-trained wake-word classifiers.
 - The custom model's own license and training-data provenance must be checked separately from the openWakeWord runtime license.
 - Threshold and consecutive-frame patience require tuning with realistic room audio after the target microphone is available.
 - A future change can replace the engine without changing the `WakeWordEngine` contract.

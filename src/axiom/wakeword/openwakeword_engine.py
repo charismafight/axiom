@@ -7,6 +7,7 @@ from typing import Any
 
 from axiom.audio import AudioFrame
 from axiom.config import AxiomSettings
+from axiom.wakeword.assets import get_feature_assets_dir
 
 
 class WakeWordModelError(RuntimeError):
@@ -48,6 +49,21 @@ class OpenWakeWordEngine:
         self._pending_pcm = bytearray()
 
         if model is None:
+            feature_directory = get_feature_assets_dir(model_path)
+            melspectrogram_path = feature_directory / "melspectrogram.onnx"
+            embedding_path = feature_directory / "embedding_model.onnx"
+            missing_assets = [
+                path.name
+                for path in (melspectrogram_path, embedding_path)
+                if not path.is_file()
+            ]
+            if missing_assets:
+                names = ", ".join(missing_assets)
+                raise WakeWordModelError(
+                    f"Shared wake-word feature assets are missing ({names}). "
+                    "Run `axiom prepare-wakeword` to install them."
+                )
+
             try:
                 from openwakeword.model import Model
             except ImportError as error:
@@ -59,6 +75,8 @@ class OpenWakeWordEngine:
                 model = Model(
                     wakeword_models=[str(model_path)],
                     inference_framework="onnx",
+                    melspec_model_path=str(melspectrogram_path),
+                    embedding_model_path=str(embedding_path),
                 )
             except Exception as error:
                 raise WakeWordModelError(

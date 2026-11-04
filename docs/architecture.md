@@ -102,7 +102,7 @@ patience = 2
 
 The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapter loads only that explicit model file. It does not load openWakeWord's built-in pretrained wake-word models; those model artifacts have a separate CC BY-NC-SA license even though the runtime code is Apache-2.0. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license). The user must provide a custom model and check the rights that apply to its training data and output.
 
-The openWakeWord runtime also requires shared ONNX feature-extractor assets. Axiom does not provision them yet. The eventual setup flow must install only those shared assets and must not invoke the upstream no-argument `download_models()` helper, which also downloads the separately licensed pre-trained wake-word classifiers.
+Run `axiom prepare-wakeword` once while online to install and validate the shared ONNX feature-extractor assets. They are stored in an `openwakeword` directory beside the configured classifier. Wake detection loads those local assets and the explicit custom classifier; inference does not need a network connection.
 
 Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent. Wake-word `threshold` must be between 0 and 1; `patience` is the number of consecutive 80 ms frames required above the threshold.
 

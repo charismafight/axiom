@@ -11,6 +11,7 @@ from axiom.config import get_config_path, load_settings
 from axiom.integrations.codex_desktop import get_desktop_status
 from axiom.integrations.windows_shortcut import InvalidShortcut, KeyboardShortcut
 from axiom.runtime import RuntimeAdaptersPending, build_runtime
+from axiom.wakeword.assets import WakeWordAssetsError, prepare_feature_assets
 
 
 def _show_status() -> int:
@@ -90,6 +91,29 @@ def _run_runtime() -> int:
     return 0
 
 
+def _prepare_wakeword() -> int:
+    try:
+        settings = load_settings()
+        if settings.wakeword_model_path is None:
+            raise WakeWordAssetsError("No wake-word model path is configured.")
+        results = prepare_feature_assets(settings.wakeword_model_path)
+    except (OSError, ValueError, WakeWordAssetsError) as error:
+        print(f"Could not prepare wake-word assets: {error}", file=sys.stderr)
+        return 1
+
+    for result in results:
+        state = "downloaded" if result.downloaded else "already valid"
+        print(f"Wake-word feature asset {state}: {result.path}")
+    print("Shared ONNX feature assets are ready.")
+    print("No pre-trained wake-word classifier models were downloaded.")
+    if not settings.wakeword_model_path.is_file():
+        print(
+            "Custom Hey Axiom classifier still needed: "
+            f"{settings.wakeword_model_path}"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="axiom",
@@ -104,6 +128,10 @@ def build_parser() -> argparse.ArgumentParser:
     commands.add_parser("status", help="Show Axiom runtime status.")
     commands.add_parser("codex", help="Show Codex Desktop Voice trigger readiness.")
     commands.add_parser("run", help="Run Axiom as a resident user-session process.")
+    commands.add_parser(
+        "prepare-wakeword",
+        help="Download and validate shared wake-word feature assets.",
+    )
     return parser
 
 
@@ -113,4 +141,6 @@ def main() -> int:
         return _show_codex_status()
     if args.command == "run":
         return _run_runtime()
+    if args.command == "prepare-wakeword":
+        return _prepare_wakeword()
     return _show_status()
