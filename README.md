@@ -22,7 +22,7 @@ This repository contains the Python package foundation, an async wake-word runti
 
 The intended Windows process is a regular per-user background app launched at sign-in, not a Windows Service. The launcher is [scripts/start_axiom.ps1](scripts/start_axiom.ps1). It is not registered for automatic startup on this development machine. `axiom run` opens the Windows default input after the model, feature assets, and Voice shortcut are configured.
 
-Windows Sound Settings owns device selection; Axiom will not identify or select the SP96. Configure a Voice shortcut in ChatGPT Desktop Settings > Voice and put the same chord in `%APPDATA%\Axiom\config.toml`. Axiom sends that shortcut after offline wake-word detection; ChatGPT Desktop owns the Voice session.
+Windows Sound Settings owns device selection; Axiom will not identify or select the SP96. Axiom defaults to `CTRL+SHIFT+ALT+S`; configure the same chord in ChatGPT Desktop Settings > Voice. Axiom sends that chord after offline wake-word detection; ChatGPT Desktop owns the Voice session.
 
 ## Install
 
@@ -46,7 +46,7 @@ User-level configuration (`%APPDATA%\Axiom\config.toml`):
 
 ```toml
 [codex]
-voice_shortcut = "CTRL+SHIFT+V"
+voice_shortcut = "CTRL+SHIFT+ALT+S"
 
 [wakeword]
 model_path = '%APPDATA%\Axiom\models\hey_axiom.onnx'
@@ -54,7 +54,7 @@ threshold = 0.5
 patience = 2
 ```
 
-Use the same shortcut configured in ChatGPT Desktop; the example is not a default. Axiom includes its own custom `Hey Axiom` model and does not use openWakeWord pre-trained wake-word classifiers. See the [openWakeWord custom model training guide](https://github.com/dscripka/openWakeWord#training-new-models). OpenAI documents that Voice in Work or Codex can use a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex).
+This is Axiom's default shortcut. ChatGPT Desktop must be configured with the same chord in Settings > Voice; `voice_shortcut` can override Axiom's default. OpenAI documents that Voice in Work or Codex can use a shortcut configured in Settings, but does not specify which key combinations are accepted: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex). Axiom includes its own custom `Hey Axiom` model and does not use openWakeWord pre-trained wake-word classifiers. See the [openWakeWord custom model training guide](https://github.com/dscripka/openWakeWord#training-new-models).
 
 The openWakeWord runtime code is Apache-2.0. The published Axiom model has a separate CC BY-NC-SA 4.0 license; upstream pre-trained classifiers are not used. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license) and the [Axiom custom model guide](docs/wakeword-model.md).
 

@@ -77,16 +77,16 @@ Input overflow or a full frame queue raises a microphone error and stops the run
 
 ## Codex Desktop shortcut
 
-Open ChatGPT Desktop, switch to Codex, and open or create a Codex task. In ChatGPT Desktop Settings > Voice, configure a keyboard shortcut. Put the same chord in Axiom's user configuration. The OpenAI help article confirms Voice in Work or Codex can be started with a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex).
+Open ChatGPT Desktop, switch to Codex, and open or create a Codex task. In ChatGPT Desktop Settings > Voice, configure the keyboard shortcut `CTRL+SHIFT+ALT+S`, or choose another chord that the app accepts and override Axiom's default in its user configuration. The OpenAI help article confirms Voice in Work or Codex can be started with a shortcut configured in Settings, but does not document accepted key combinations: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex).
 
 The configuration key is `codex.voice_shortcut`, for example:
 
 ```toml
 [codex]
-voice_shortcut = "CTRL+SHIFT+V"
+voice_shortcut = "CTRL+SHIFT+ALT+S"
 ```
 
-The example is illustrative; it is not a default. Axiom sends the key chord using the Windows keyboard input API. Axiom does not bring ChatGPT Desktop to the foreground, identify the active task, or detect whether Voice is already active. The user will check shortcut behavior with ChatGPT Desktop foregrounded and in the background during final end-to-end validation after the product is assembled.
+This is Axiom's default; the setting can override it. Axiom sends the key chord using the Windows keyboard input API. Axiom does not bring ChatGPT Desktop to the foreground, identify the active task, or detect whether Voice is already active. The user will check shortcut behavior with ChatGPT Desktop foregrounded and in the background during final end-to-end validation after the product is assembled.
 
 ChatGPT Desktop must be running with a Codex task ready. Axiom's status command can report process state and shortcut configuration, but does not change either one. Availability of Voice may depend on account, workspace, and app rollout.
 
@@ -96,7 +96,7 @@ The optional user-level TOML file is located at `%APPDATA%\Axiom\config.toml` on
 
 ```toml
 [codex]
-voice_shortcut = "CTRL+SHIFT+V"
+voice_shortcut = "CTRL+SHIFT+ALT+S"
 
 [wakeword]
 model_path = '%APPDATA%\Axiom\models\hey_axiom.onnx'
@@ -108,7 +108,7 @@ The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapt
 
 Run `axiom prepare-wakeword` once while online to install and validate the shared ONNX feature-extractor assets. They are stored in an `openwakeword` directory beside the configured classifier. Wake detection loads those local assets and the explicit custom classifier; inference does not need a network connection.
 
-Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. No shortcut is assumed when the setting is absent. Wake-word `threshold` must be between 0 and 1; the Axiom adapter triggers after `patience` consecutive 80 ms model scores meet or exceed that threshold.
+Supported shortcut key names currently include letters, digits, `F1` through `F24`, and common navigation keys. Supported modifiers are `CTRL`, `ALT`, `SHIFT`, and `WIN`. The default is `CTRL+SHIFT+ALT+S`; the setting can override it or be set to `null` to disable the shortcut. Wake-word `threshold` must be between 0 and 1; the Axiom adapter triggers after `patience` consecutive 80 ms model scores meet or exceed that threshold.
 
 ## Windows process model
 

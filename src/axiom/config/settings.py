@@ -9,11 +9,14 @@ from dataclasses import dataclass
 from pathlib import Path
 
 
+DEFAULT_CODEX_VOICE_SHORTCUT = "CTRL+SHIFT+ALT+S"
+
+
 @dataclass(frozen=True, slots=True)
 class AxiomSettings:
     """Settings for offline wake detection and Codex Desktop Voice."""
 
-    codex_voice_shortcut: str | None = None
+    codex_voice_shortcut: str | None = DEFAULT_CODEX_VOICE_SHORTCUT
     wakeword_model_path: Path | None = None
     wakeword_threshold: float = 0.5
     wakeword_patience: int = 2
@@ -44,7 +47,7 @@ def load_settings(path: Path | None = None) -> AxiomSettings:
     if not isinstance(codex, dict):
         raise ValueError("The [codex] configuration section must be a table.")
 
-    shortcut = codex.get("voice_shortcut")
+    shortcut = codex.get("voice_shortcut", DEFAULT_CODEX_VOICE_SHORTCUT)
     if shortcut is not None and (not isinstance(shortcut, str) or not shortcut.strip()):
         raise ValueError("codex.voice_shortcut must be a non-empty string.")
 

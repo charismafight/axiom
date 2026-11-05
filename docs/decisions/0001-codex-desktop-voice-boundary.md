@@ -7,7 +7,7 @@
 
 Axiom's first use case is spoken English practice. The agreed flow is an offline local wake phrase followed by ChatGPT Desktop's native Voice experience in a Codex task. Axiom should not own the AI conversation or reproduce ChatGPT's speech capture and output.
 
-OpenAI's user documentation says Voice in Work or Codex on desktop can be started with a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex). The shortcut key itself is chosen by the user; no default is assumed.
+OpenAI's user documentation says Voice in Work or Codex on desktop can be started with a shortcut configured in Settings: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex). It does not document accepted key combinations. Axiom uses `CTRL+SHIFT+ALT+S` as its default; the same chord must be configured in ChatGPT Desktop or overridden in Axiom's settings.
 
 ## Decision
 
