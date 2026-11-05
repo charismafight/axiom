@@ -1,8 +1,4 @@
-"""Device-independent microphone input contract.
-
-The Windows audio backend will implement this contract after the target
-hardware is available for integration work. Windows owns device selection.
-"""
+"""Microphone input contract using the Windows-selected default device."""
 
 from __future__ import annotations
 

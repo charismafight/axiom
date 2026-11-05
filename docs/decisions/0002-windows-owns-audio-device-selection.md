@@ -18,5 +18,5 @@ The user configures microphones and speakers in Windows. Axiom only needs microp
 ## Consequences
 
 - The product has no device picker or device-name configuration.
-- The future audio backend must use Windows' default input and handle stream failure and reconnect.
+- The audio backend uses Windows' default input and reports stream failures. Reconnect behavior remains to be validated with the target hardware.
 - The SP96 is used for end-to-end validation after it arrives, not as a runtime identity requirement.

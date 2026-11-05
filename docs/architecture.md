@@ -57,7 +57,7 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 | --- | --- | --- |
 | CLI | Show local status and Codex Desktop readiness | Never opens audio or sends a shortcut during status checks |
 | Configuration | Read the user-level shortcut, wake-word model, threshold, and patience settings | No AI credentials or device names |
-| Audio input | Yield microphone frames from the Windows default input | Interface only until microphone integration |
+| Audio input | Yield 16 kHz mono PCM frames from the Windows default input | Implemented with a bounded callback-to-async queue; target hardware validation pending |
 | Wake-word engine | Detect `Hey Axiom` locally and offline | openWakeWord adapter accepts an explicit custom ONNX model; no built-in pretrained model is selected |
 | Runtime | Wait for frames and trigger the shortcut on a wake match | Async state loop is implemented |
 | Codex Desktop integration | Send the configured keyboard chord and report app readiness | Uses Win32 `SendInput`; does not inspect or manipulate desktop UI |
@@ -65,11 +65,11 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 
 ## Audio input
 
-The eventual audio backend opens only the Windows-selected default microphone input and yields mono, signed 16-bit little-endian PCM frames at 16 kHz. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
+The Windows backend uses `sounddevice.RawInputStream` with the system default input (`device=None`) and yields fixed 80 ms mono, signed 16-bit little-endian PCM frames at 16 kHz. A bounded queue bridges the audio callback thread into the async frame iterator. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
 
 ChatGPT Desktop independently uses the microphone and speaker selected by Windows for its Voice session. Axiom has no output audio interface. The Yealink SP96 is planned for end-to-end validation after it arrives, but Axiom does not depend on its name or model.
 
-The future backend must bridge audio callbacks into the async frame iterator without blocking the event loop. Python documents `loop.call_soon_threadsafe()` for crossing into an asyncio event loop from another thread: [asyncio multithreading guidance](https://docs.python.org/3/library/asyncio-dev.html).
+Input overflow or a full frame queue raises a microphone error and stops the runtime cleanly. Automatic reconnect behavior remains to be implemented and validated with the target device.
 
 ## Codex Desktop shortcut
 
@@ -132,10 +132,10 @@ src/axiom/
     └── state.py
 ```
 
-`axiom run` is the resident entry point. It currently exits with a clear adapter-pending message instead of opening an empty or unavailable audio stream. Keep all import-time behavior side-effect free.
+`axiom run` is the resident entry point. It checks configuration and model resources before opening the Windows default microphone. Keep all import-time behavior side-effect free.
 
 ## Open implementation details
 
-1. Generate or obtain a custom `Hey Axiom` ONNX model and verify its license and detection quality.
-2. Integrate the Windows default microphone backend after the SP96 arrives.
+1. Evaluate the published `Hey Axiom` model's detection quality after the SP96 arrives.
+2. Validate the Windows default microphone backend and stream recovery after the SP96 arrives.
 3. Confirm the app rollout, account, and workspace provide Voice in Codex.

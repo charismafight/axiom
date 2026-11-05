@@ -3,14 +3,20 @@
 from __future__ import annotations
 
 import asyncio
+import platform
 from collections.abc import AsyncIterator
 
-from axiom.audio import AudioFrame, AudioInput
+from axiom.audio import AudioFrame, AudioInput, WindowsDefaultAudioInput
 from axiom.config import load_settings
 from axiom.integrations.codex_desktop import VoiceShortcut
+from axiom.integrations.windows_shortcut import InvalidShortcut, create_voice_shortcut
 from axiom.runtime.state import RuntimeState, RuntimeStateMachine
 from axiom.wakeword.assets import get_feature_assets_dir
 from axiom.wakeword.engine import WakeWordEngine
+from axiom.wakeword.openwakeword_engine import (
+    WakeWordModelError,
+    create_openwakeword_engine,
+)
 
 
 class AxiomRuntime:
@@ -83,11 +89,11 @@ class AxiomRuntime:
 
 
 class RuntimeAdaptersPending(RuntimeError):
-    """Raised until the device-dependent adapters are connected."""
+    """Raised when the runtime configuration or prerequisites are not ready."""
 
 
 def build_runtime() -> AxiomRuntime:
-    """Create the configured runtime once concrete adapters are available."""
+    """Create the configured Windows-default microphone runtime."""
     try:
         settings = load_settings()
     except (OSError, ValueError) as error:
@@ -95,7 +101,9 @@ def build_runtime() -> AxiomRuntime:
             f"Axiom user configuration is invalid: {error}"
         ) from error
 
-    pending = ["the Windows default microphone adapter is not connected"]
+    pending: list[str] = []
+    if platform.system() != "Windows":
+        pending.append("the resident microphone and shortcut runtime requires Windows")
     if (
         settings.wakeword_model_path is None
         or not settings.wakeword_model_path.is_file()
@@ -119,6 +127,17 @@ def build_runtime() -> AxiomRuntime:
     if not settings.codex_voice_shortcut:
         pending.append("the Codex Voice shortcut is not configured")
 
-    raise RuntimeAdaptersPending(
-        "Axiom cannot start yet: " + "; ".join(pending) + "."
+    if pending:
+        raise RuntimeAdaptersPending("Axiom cannot start: " + "; ".join(pending) + ".")
+
+    try:
+        wakeword = create_openwakeword_engine(settings)
+        voice_shortcut = create_voice_shortcut(settings.codex_voice_shortcut or "")
+    except (WakeWordModelError, InvalidShortcut) as error:
+        raise RuntimeAdaptersPending(f"Axiom runtime setup failed: {error}") from error
+
+    return AxiomRuntime(
+        audio=WindowsDefaultAudioInput(),
+        wakeword=wakeword,
+        voice_shortcut=voice_shortcut,
     )

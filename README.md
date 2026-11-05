@@ -18,9 +18,9 @@ Project files, source code, comments, and user-facing strings are written in Eng
 
 ## Current stage
 
-This repository contains the Python package foundation, an async wake-word runtime, an openWakeWord adapter, user settings, the published custom `Hey Axiom` ONNX model, and the Windows keyboard shortcut sender. The device-dependent microphone backend is not included yet. Axiom does not use a separate AI provider or implement its own TTS.
+This repository contains the Python package foundation, an async wake-word runtime, a Windows-default microphone adapter, an openWakeWord adapter, user settings, the published custom `Hey Axiom` ONNX model, and the Windows keyboard shortcut sender. Target-device reliability and wake-word quality still need validation with the SP96. Axiom does not use a separate AI provider or implement its own TTS.
 
-The intended Windows process is a regular per-user background app launched at sign-in, not a Windows Service. The launcher is [scripts/start_axiom.ps1](scripts/start_axiom.ps1). It is not registered for automatic startup on this development machine, and `axiom run` exits with an adapter-pending message until the microphone backend is implemented.
+The intended Windows process is a regular per-user background app launched at sign-in, not a Windows Service. The launcher is [scripts/start_axiom.ps1](scripts/start_axiom.ps1). It is not registered for automatic startup on this development machine. `axiom run` opens the Windows default input after the model, feature assets, and Voice shortcut are configured.
 
 Windows Sound Settings owns device selection; Axiom will not identify or select the SP96. Configure a Voice shortcut in ChatGPT Desktop Settings > Voice and put the same chord in `%APPDATA%\Axiom\config.toml`. Axiom sends that shortcut after offline wake-word detection; ChatGPT Desktop owns the Voice session.
 
@@ -29,7 +29,7 @@ Windows Sound Settings owns device selection; Axiom will not identify or select 
 ```powershell
 python -m venv .venv
 .venv\Scripts\Activate.ps1
-python -m pip install -e ".[wakeword]"
+python -m pip install -e ".[audio,wakeword]"
 $AxiomModelDirectory = Join-Path $env:APPDATA "Axiom\models"
 New-Item -ItemType Directory -Force -Path $AxiomModelDirectory | Out-Null
 Copy-Item .\models\hey_axiom.onnx (Join-Path $AxiomModelDirectory "hey_axiom.onnx") -Force
@@ -85,4 +85,4 @@ axiom/
         ├── wakeword/
 ```
 
-The package provides status and Codex Desktop readiness commands. The wake-listen/shortcut-trigger loop and model adapter are independent of hardware; the Windows microphone backend remains to be implemented.
+The package provides status and Codex Desktop readiness commands. The wake-listen/shortcut-trigger loop and model adapter are connected to the Windows default input; target-hardware and long-running reliability checks remain.

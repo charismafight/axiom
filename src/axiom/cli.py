@@ -7,6 +7,7 @@ import asyncio
 import sys
 
 from axiom import __version__
+from axiom.audio import AudioInputError
 from axiom.config import get_config_path, load_settings
 from axiom.integrations.codex_desktop import get_desktop_status
 from axiom.integrations.windows_shortcut import InvalidShortcut, KeyboardShortcut
@@ -106,6 +107,9 @@ def _run_runtime() -> int:
         asyncio.run(runtime.run())
     except KeyboardInterrupt:
         return 0
+    except AudioInputError as error:
+        print(f"Axiom microphone input failed: {error}", file=sys.stderr)
+        return 1
     return 0
 
 

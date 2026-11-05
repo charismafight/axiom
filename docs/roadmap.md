@@ -19,16 +19,16 @@
 - Add Codex Desktop process status and a Windows keyboard shortcut sender.
 - Add the async wake-word runtime and the per-user Windows launcher script.
 
-**Exit criteria:** The device-independent wake/shortcut flow and wake-word adapter are defined. `axiom run` reports the missing microphone backend or custom model without opening audio or keeping an empty process alive.
+**Exit criteria:** The device-independent wake/shortcut flow and wake-word adapter are defined. `axiom run` reports missing configuration or model resources without opening audio or keeping an empty process alive.
 
 ## Stage 2: Windows microphone and offline wake word
 
 - [x] Publish an initial custom `Hey Axiom` ONNX classifier with its license and training-data provenance.
 - [x] Verify `axiom prepare-wakeword` provisions only the shared ONNX feature assets.
 - [x] Verify CPU classifier initialization and synthetic-silence inference with the provisioned shared feature assets.
-- Implement microphone capture from the Windows-selected default input.
-- Bridge audio callbacks into the async frame iterator safely.
-- Feed frames to the local wake-word detector without saving them.
+- [x] Implement microphone capture from the Windows-selected default input.
+- [x] Bridge audio callbacks into the async frame iterator safely.
+- [x] Feed frames to the local wake-word detector without saving them.
 - Validate wake detection and microphone error recovery after the SP96 arrives and is selected in Windows.
 
 **Exit criteria:** On the target machine, Axiom detects `Hey Axiom` locally and offline using the Windows default microphone, without a device inventory or selection flow.
