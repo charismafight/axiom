@@ -60,7 +60,7 @@ The openWakeWord runtime code is Apache-2.0. The published Axiom model has a sep
 
 Run `axiom prepare-wakeword` once while online to download and validate the two shared ONNX feature-extractor assets. They are stored next to the configured classifier under `openwakeword`. The command downloads only these shared assets; it does not fetch upstream pre-trained wake-word classifiers. Wake detection itself performs local inference and does not need a network connection.
 
-`scripts/start_axiom.ps1` invokes `python -m axiom run`. The resident entry point currently reports that runtime adapters are pending rather than leaving an idle process running.
+`scripts/start_axiom.ps1` invokes `python -m axiom run`. Before opening the microphone, `axiom run` validates the model, shared feature assets, and configured Voice shortcut. If a prerequisite is missing, it exits with an actionable message instead of leaving an idle process running. Press `Ctrl+C` to stop it.
 
 ## Design documents
 
@@ -88,4 +88,4 @@ axiom/
         ├── wakeword/
 ```
 
-The package provides status and Codex Desktop readiness commands. The wake-listen/shortcut-trigger loop and model adapter are connected to the Windows default input; target-hardware and long-running reliability checks remain.
+The CLI provides status, Codex Desktop readiness, wake-word asset preparation, microphone signal testing, and the resident `run` command. The wake-listen/shortcut-trigger loop is connected to the Windows default input; target-hardware and long-running reliability checks remain.
