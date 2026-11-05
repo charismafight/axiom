@@ -12,9 +12,10 @@ from axiom.audio.io import AudioFrame
 
 
 MODEL_SAMPLE_RATE = 16_000
-_SAMPLE_WIDTH_BYTES = 4
+_CAPTURE_SAMPLE_WIDTH_BYTES = 4
+_MODEL_SAMPLE_WIDTH_BYTES = 2
 _MODEL_BLOCK_SAMPLES = 1_280
-_MODEL_BLOCK_BYTES = _MODEL_BLOCK_SAMPLES * _SAMPLE_WIDTH_BYTES
+_MODEL_BLOCK_BYTES = _MODEL_BLOCK_SAMPLES * _MODEL_SAMPLE_WIDTH_BYTES
 _QUEUE_BLOCKS = 8
 
 
@@ -89,7 +90,7 @@ class WindowsDefaultAudioInput:
                     AudioInputError("The microphone input format was not initialized."),
                 )
                 return
-            expected_bytes = frames * channels * _SAMPLE_WIDTH_BYTES
+            expected_bytes = frames * channels * _CAPTURE_SAMPLE_WIDTH_BYTES
             if len(pcm) != expected_bytes:
                 loop.call_soon_threadsafe(
                     self._fail,
