@@ -13,7 +13,7 @@ The project is public under MIT. Wake-word runtime code, model assets, custom-mo
 
 - Use the openWakeWord Python runtime through an Axiom-owned adapter.
 - Load only an explicit custom ONNX classifier for `Hey Axiom`; do not load openWakeWord's built-in pretrained wake-word models.
-- Keep model artifacts out of the public repository until their provenance and license are confirmed. The user supplies the model at `%APPDATA%\Axiom\models\hey_axiom.onnx` or sets another path in user configuration.
+- Publish the custom classifier in `models/` with a separate provenance and license notice. Install it at `%APPDATA%\Axiom\models\hey_axiom.onnx` or set another path in user configuration.
 - Process only 16 kHz, mono, signed 16-bit little-endian PCM frames. The Windows audio backend remains responsible for adapting the Windows-selected default microphone to this format.
 - Keep the openWakeWord dependency optional and import it only when constructing the wake-word adapter.
 
@@ -27,7 +27,7 @@ The project is public under MIT. Wake-word runtime code, model assets, custom-mo
 
 ## Consequences
 
-- Axiom needs a custom `Hey Axiom` ONNX model before wake detection can run.
+- A custom classifier must be present at the configured path before wake detection can run; the repository publishes an initial `Hey Axiom` classifier separately from the MIT-licensed source code.
 - The `axiom prepare-wakeword` command downloads and validates only the shared ONNX feature-extractor assets. It does not use the upstream default downloader, which also downloads the separately licensed pre-trained wake-word classifiers.
 - The custom model's own license and training-data provenance must be checked separately from the openWakeWord runtime license.
 - Threshold and consecutive-frame patience require tuning with realistic room audio after the target microphone is available.

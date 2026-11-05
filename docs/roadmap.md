@@ -23,9 +23,9 @@
 
 ## Stage 2: Windows microphone and offline wake word
 
-- Obtain or train a custom `Hey Axiom` ONNX classifier and document its license and training-data provenance.
-- Verify `axiom prepare-wakeword` provisions only the shared ONNX feature assets.
-- Verify local classifier inference with the provisioned shared feature assets.
+- [x] Publish an initial custom `Hey Axiom` ONNX classifier with its license and training-data provenance.
+- [x] Verify `axiom prepare-wakeword` provisions only the shared ONNX feature assets.
+- [x] Verify CPU classifier initialization and synthetic-silence inference with the provisioned shared feature assets.
 - Implement microphone capture from the Windows-selected default input.
 - Bridge audio callbacks into the async frame iterator safely.
 - Feed frames to the local wake-word detector without saving them.

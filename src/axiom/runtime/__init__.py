@@ -1,6 +1,6 @@
 """Axiom application lifecycle and wake-word coordination."""
 
-from axiom.runtime.app import AxiomRuntime, RuntimeAdaptersPending
+from axiom.runtime.app import AxiomRuntime, RuntimeAdaptersPending, build_runtime
 from axiom.runtime.state import InvalidStateTransition, RuntimeState, RuntimeStateMachine
 
 __all__ = [
@@ -9,4 +9,5 @@ __all__ = [
     "RuntimeAdaptersPending",
     "RuntimeState",
     "RuntimeStateMachine",
+    "build_runtime",
 ]

@@ -88,7 +88,7 @@ ChatGPT Desktop must be running with a Codex task ready. Axiom's status command 
 
 ## Configuration
 
-The optional user-level TOML file is located at `%APPDATA%\Axiom\config.toml` on Windows. Axiom does not create it automatically. Use the exact shortcut saved in ChatGPT Desktop Settings > Voice and provide a custom ONNX model trained for `Hey Axiom`:
+The optional user-level TOML file is located at `%APPDATA%\Axiom\config.toml` on Windows. Axiom does not create it automatically. Use the exact shortcut saved in ChatGPT Desktop Settings > Voice. The repository publishes a custom `Hey Axiom` classifier; install it at the default path as described in the [model guide](wakeword-model.md):
 
 ```toml
 [codex]
@@ -100,7 +100,7 @@ threshold = 0.5
 patience = 2
 ```
 
-The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapter loads only that explicit model file. It does not load openWakeWord's built-in pretrained wake-word models; those model artifacts have a separate CC BY-NC-SA license even though the runtime code is Apache-2.0. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license). The user must provide a custom model and check the rights that apply to its training data and output.
+The default model path is `%APPDATA%\Axiom\models\hey_axiom.onnx`. Axiom's adapter loads only that explicit model file. It does not load openWakeWord's built-in pretrained wake-word models. The published Axiom classifier has its own CC BY-NC-SA 4.0 license; the runtime code is Apache-2.0. See the [model license notice](../models/README.md) and the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license).
 
 Run `axiom prepare-wakeword` once while online to install and validate the shared ONNX feature-extractor assets. They are stored in an `openwakeword` directory beside the configured classifier. Wake detection loads those local assets and the explicit custom classifier; inference does not need a network connection.
 

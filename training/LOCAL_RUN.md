@@ -50,6 +50,6 @@ The output classifier is written to `training/output/my_custom_model/hey_axiom.o
 - Room impulse responses come from [MIT Environmental Impulse Responses](https://huggingface.co/datasets/davidscripka/MIT_environmental_impulse_responses).
 - Negative features and false-positive validation features come from the [openWakeWord feature dataset](https://huggingface.co/datasets/davidscripka/openwakeword_features).
 
-Review the source dataset, voice/checkpoint, and upstream project licenses before redistributing generated audio or a trained model. In particular, the openWakeWord feature dataset is marked CC BY-NC-SA 4.0, and the MIT RIR mirror does not state a clear license. The repository therefore contains training code and provenance only; it does not include training data, generated audio, or model weights.
+Review the source dataset, voice/checkpoint, and upstream project licenses before redistributing generated audio or a trained model. In particular, the openWakeWord feature dataset is marked CC BY-NC-SA 4.0, and the MIT RIR mirror does not state a clear license. The repository does not include training data or generated audio. It does include a separately published classifier under `models/`; see its provenance and license notice before use or redistribution.
 
 See [the model and licensing notes](../docs/wakeword-model.md) for Axiom's deployment guidance.
