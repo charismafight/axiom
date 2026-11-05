@@ -36,8 +36,11 @@ Copy-Item .\models\hey_axiom.onnx (Join-Path $AxiomModelDirectory "hey_axiom.onn
 axiom status
 axiom codex
 axiom prepare-wakeword
+axiom test
 .\scripts\start_axiom.ps1
 ```
+
+Run `axiom test` to capture five seconds from the Windows default input. It reports the negotiated capture rate and channel count plus peak and RMS levels, then discards the audio. Speak normally while it runs; use `axiom test --duration 10` for a longer check.
 
 User-level configuration (`%APPDATA%\Axiom\config.toml`):
 

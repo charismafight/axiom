@@ -57,7 +57,7 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 | --- | --- | --- |
 | CLI | Show local status and Codex Desktop readiness | Never opens audio or sends a shortcut during status checks |
 | Configuration | Read the user-level shortcut, wake-word model, threshold, and patience settings | No AI credentials or device names |
-| Audio input | Yield 16 kHz mono PCM frames from the Windows default input | Implemented with a bounded callback-to-async queue; target hardware validation pending |
+| Audio input | Capture the Windows default format and adapt it to 16 kHz mono PCM | Implemented with SoXR resampling and a bounded callback-to-async queue; target hardware validation pending |
 | Wake-word engine | Detect `Hey Axiom` locally and offline | openWakeWord adapter accepts an explicit custom ONNX model; no built-in pretrained model is selected |
 | Runtime | Wait for frames and trigger the shortcut on a wake match | Async state loop is implemented |
 | Codex Desktop integration | Send the configured keyboard chord and report app readiness | Uses Win32 `SendInput`; does not inspect or manipulate desktop UI |
@@ -65,7 +65,11 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 
 ## Audio input
 
-The Windows backend uses `sounddevice.RawInputStream` with the system default input (`device=None`) and yields fixed 80 ms mono, signed 16-bit little-endian PCM frames at 16 kHz. A bounded queue bridges the audio callback thread into the async frame iterator. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
+The Windows backend uses `sounddevice.RawInputStream` with the system default input (`device=None`) and leaves the sample rate and channel count unspecified so PortAudio chooses a supported stream format for that input. It captures as float32, then a high-quality streaming resampler converts the in-memory data to the 16 kHz mono, signed 16-bit PCM required by openWakeWord; the detector receives fixed 80 ms frames. If the endpoint exposes multiple channels, Axiom resamples them and mixes them to mono. A bounded queue bridges the audio callback thread into the async frame iterator. Axiom does not enumerate devices, match `SP96`, provide a device picker, or change Windows audio settings. Audio is consumed in memory for local wake-word detection and is not saved by default.
+
+Yealink lists the SP96 microphone frequency response as 100 Hz–10 kHz but does not publish its Windows microphone input sample rate. The listed 48 kHz speaker bandwidth is an output specification, not the microphone capture rate. See the [SP96 technical specifications](https://www.yealink.com/en/product-tech-specs/speakerphone-sp96).
+
+`axiom test` opens the same Windows default input for five seconds and reports the negotiated capture format and signal levels after conversion. It writes no audio files. The duration can be changed with `--duration`.
 
 ChatGPT Desktop independently uses the microphone and speaker selected by Windows for its Voice session. Axiom has no output audio interface. The Yealink SP96 is planned for end-to-end validation after it arrives, but Axiom does not depend on its name or model.
 

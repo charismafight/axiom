@@ -12,7 +12,7 @@ requires-python = ">=3.12"
 dependencies = []
 
 [project.optional-dependencies]
-audio = ["sounddevice==0.5.6"]
+audio = ["numpy>=1.26,<3", "sounddevice==0.5.6", "soxr==1.1.0"]
 wakeword = ["openwakeword==0.6.0"]
 
 [project.scripts]
