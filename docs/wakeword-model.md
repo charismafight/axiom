@@ -27,3 +27,8 @@ Do not treat a successful ONNX load as evidence of wake-word quality. After the 
 A WSL 2 workflow for this exact wake phrase is documented in [training/LOCAL_RUN.md](../training/LOCAL_RUN.md). It synthesizes phrase examples with Piper, uses MUSAN backgrounds and MIT room impulse responses, and downloads negative and validation features from the official openWakeWord feature dataset.
 
 The feature dataset is marked CC BY-NC-SA 4.0, and the MIT RIR mirror does not declare a clear license. Piper's checkpoint and voice data also have separate terms. Review all applicable terms before distributing a model trained with these inputs. The public repository includes the training scripts and source references, but no data, generated speech, or ONNX model.
+
+
+## Published model artifact
+
+The trained ONNX model is published at [`models/hey_axiom.onnx`](../models/hey_axiom.onnx). Its provenance and separate model-level license notice are in [`models/README.md`](../models/README.md). The model notice applies to that artifact and does not change the license of Axiom's source code.
