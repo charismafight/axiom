@@ -38,6 +38,7 @@
 - [ ] Configure the same keyboard chord in ChatGPT Desktop Settings > Voice and Axiom's TOML settings on the target machine.
 - [x] Report ChatGPT Desktop process state and missing or invalid shortcut configuration through the CLI.
 - [x] Send the configured shortcut after the wake-word engine reports a match.
+- [x] Play a prerecorded wake acknowledgement through the Windows default output.
 - [ ] Confirm the shortcut triggers Voice as expected on the target machine.
 
 **Exit criteria:** The runtime sends the configured chord after a wake-word event, and the CLI reports missing app or shortcut configuration.

@@ -6,7 +6,7 @@
 
 ## Product definition
 
-Axiom is a Windows resident program for spoken English practice. It listens for the wake phrase `Hey Axiom` using a local, offline detector. When detected, it sends the keyboard shortcut configured for Voice in ChatGPT Desktop. ChatGPT Desktop owns the conversation, microphone capture during the conversation, and speech output.
+Axiom is a Windows resident program for spoken English practice. It listens for the wake phrase `Hey Axiom` using a local, offline detector. When detected, it plays a short prerecorded English acknowledgement through the Windows default output, then sends the keyboard shortcut configured for Voice in ChatGPT Desktop. ChatGPT Desktop owns the conversation, microphone capture during the conversation, and speech output.
 
 Axiom does not select an AI service, implement its own speech recognition or speech synthesis, or manage speaker devices. The first implementation milestone establishes the Python process, settings, wake-word runtime contract, and shortcut trigger before hardware-specific integration.
 
@@ -14,6 +14,7 @@ Axiom does not select an AI service, implement its own speech recognition or spe
 
 - Keep wake-word detection local and offline.
 - Use the shortcut the user configured in ChatGPT Desktop Settings > Voice.
+- Play a short, prerecorded wake acknowledgement through the Windows default output.
 - Leave conversation capture, AI responses, and speech output to ChatGPT Desktop.
 - Let Windows Sound Settings own microphone and speaker selection.
 - Keep startup and runtime behavior in the signed-in Windows user session.
@@ -32,24 +33,17 @@ Axiom does not select an AI service, implement its own speech recognition or spe
 
 ```text
 Windows user sign-in
-          │
-          ▼
-  Axiom resident process
-          │
-          ├── Windows default microphone ──► offline wake-word detector
-          │                                      │
-          │                                  Hey Axiom
-          │                                      │
-          └── configured keyboard shortcut ◄────┘
-                         │
-                         ▼
-               ChatGPT Desktop Voice
-                 in a Codex task
-                         │
-              capture, AI, speech output
+  → Axiom resident process
+  → Windows default microphone
+  → offline wake-word detector
+  → Hey Axiom
+  → prerecorded “Listening” cue via Windows default output
+  → configured keyboard shortcut
+  → ChatGPT Desktop Voice in a Codex task
+  → conversation capture, AI, speech output
 ```
 
-The async runtime waits for microphone frames instead of polling. Each frame is passed to the local wake-word engine. On a match, Axiom sends one configured shortcut and resets the detector. The conversation then belongs to ChatGPT Desktop; Axiom does not stream audio to it or manage the Voice session.
+The async runtime waits for microphone frames instead of polling. Each frame is passed to the local wake-word engine. On a match, Axiom plays the acknowledgement, sends one configured shortcut, and resets the detector. The conversation then belongs to ChatGPT Desktop; Axiom does not stream audio to it or manage the Voice session.
 
 ## Component responsibilities
 
@@ -60,6 +54,7 @@ The async runtime waits for microphone frames instead of polling. Each frame is 
 | Audio input | Capture the Windows default format and adapt it to 16 kHz mono PCM | Implemented with SoXR resampling and a bounded callback-to-async queue; target hardware validation pending |
 | Wake-word engine | Detect `Hey Axiom` locally and offline | openWakeWord adapter accepts an explicit custom ONNX model; no built-in pretrained model is selected |
 | Runtime | Wait for frames and trigger the shortcut on a wake match | Async state loop is implemented |
+| Wake acknowledgement | Play a short prerecorded English cue before the shortcut | Uses Windows default output; no TTS engine or speaker selection |
 | Codex Desktop integration | Send the configured keyboard chord and report app readiness | Uses Win32 `SendInput`; does not inspect or manipulate desktop UI |
 | ChatGPT Desktop | Handle conversation capture, AI responses, and speech output | User-configured Voice shortcut in a Codex task |
 
@@ -71,7 +66,11 @@ Yealink lists the SP96 microphone frequency response as 100 Hz–10 kHz but does
 
 `axiom test` opens the same Windows default input for five seconds and reports the negotiated capture format and signal levels after conversion. It writes no audio files. The duration can be changed with `--duration`.
 
-ChatGPT Desktop independently uses the microphone and speaker selected by Windows for its Voice session. Axiom has no output audio interface. The Yealink SP96 is planned for end-to-end validation after it arrives, but Axiom does not depend on its name or model.
+ChatGPT Desktop independently uses the microphone and speaker selected by Windows for its Voice session. Axiom plays its short wake acknowledgement through the same Windows default output, without enumerating or selecting output devices. The Yealink SP96 is planned for end-to-end validation, but Axiom does not depend on its name or model.
+
+## Wake acknowledgement
+
+After a wake-word match, Axiom plays the prerecorded word “Listening” before sending the Voice shortcut. This gives the user immediate feedback without adding a runtime speech-synthesis engine. While the clip plays, the runtime drains and discards microphone frames, then waits for a short audio tail before resuming wake detection; this prevents the acknowledgement from feeding back into the detector. The WAV file and its separate license are documented in [`src/axiom/voice/assets/NOTICE.md`](../src/axiom/voice/assets/NOTICE.md).
 
 Input overflow or a full frame queue raises a microphone error and stops the runtime cleanly. Automatic reconnect behavior remains to be implemented and validated with the target device.
 

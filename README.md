@@ -3,7 +3,7 @@
 **Your AI Conversation Companion**<br>
 Think. Speak. Explore.
 
-Axiom is a Windows resident voice companion for spoken English practice. It listens for `Hey Axiom` with an offline wake-word detector, then sends the keyboard shortcut configured for Voice in ChatGPT Desktop. ChatGPT Desktop handles the conversation, microphone capture during the conversation, and speech output.
+Axiom is a Windows resident voice companion for spoken English practice. It listens for `Hey Axiom` with an offline wake-word detector, plays a short prerecorded English “Listening” acknowledgement, then sends the keyboard shortcut configured for Voice in ChatGPT Desktop. ChatGPT Desktop handles the conversation, microphone capture during the conversation, and speech output.
 
 ## Product identity
 
@@ -18,11 +18,11 @@ Project files, source code, comments, and user-facing strings are written in Eng
 
 ## Current stage
 
-This repository contains the Python package foundation, an async wake-word runtime, a Windows-default microphone adapter, an openWakeWord adapter, user settings, the published custom `Hey Axiom` ONNX model, and the Windows keyboard shortcut sender. Target-device reliability and wake-word quality still need validation with the SP96. Axiom does not use a separate AI provider or implement its own TTS.
+This repository contains the Python package foundation, an async wake-word runtime, a Windows-default microphone adapter, an openWakeWord adapter, user settings, the published custom `Hey Axiom` ONNX model, the Windows keyboard shortcut sender, and a prerecorded wake acknowledgement. Target-device reliability and wake-word quality still need validation with the SP96. Axiom does not use a separate AI provider or synthesize conversation speech.
 
 The intended Windows process is a regular per-user background app launched at sign-in, not a Windows Service. The launcher is [scripts/start_axiom.ps1](scripts/start_axiom.ps1). It is not registered for automatic startup on this development machine. `axiom run` opens the Windows default input after the model, feature assets, and Voice shortcut are configured.
 
-Windows Sound Settings owns device selection; Axiom will not identify or select the SP96. Axiom defaults to `CTRL+SHIFT+ALT+S`; configure the same chord in ChatGPT Desktop Settings > Voice. Axiom sends that chord after offline wake-word detection; ChatGPT Desktop owns the Voice session.
+Windows Sound Settings owns device selection; Axiom will not identify or select the SP96. Axiom plays its acknowledgement through the Windows default output without selecting a speaker. Axiom defaults to `CTRL+SHIFT+ALT+S`; configure the same chord in ChatGPT Desktop Settings > Voice. Axiom sends that chord after offline wake-word detection; ChatGPT Desktop owns the Voice session.
 
 ## Install
 
@@ -56,7 +56,7 @@ patience = 2
 
 This is Axiom's default shortcut. ChatGPT Desktop must be configured with the same chord in Settings > Voice; `voice_shortcut` can override Axiom's default. OpenAI documents that Voice in Work or Codex can use a shortcut configured in Settings, but does not specify which key combinations are accepted: [ChatGPT Work and Codex](https://help.openai.com/en/articles/20001275-chatgpt-work-and-codex). Axiom includes its own custom `Hey Axiom` model and does not use openWakeWord pre-trained wake-word classifiers. See the [openWakeWord custom model training guide](https://github.com/dscripka/openWakeWord#training-new-models).
 
-The openWakeWord runtime code is Apache-2.0. The published Axiom model has a separate CC BY-NC-SA 4.0 license; upstream pre-trained classifiers are not used. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license) and the [Axiom custom model guide](docs/wakeword-model.md).
+The openWakeWord runtime code is Apache-2.0. The published Axiom model has a separate CC BY-NC-SA 4.0 license; the prerecorded “Listening” acknowledgement has a separate CC BY-SA 3.0 license. Upstream pre-trained classifiers are not used. See the [openWakeWord license notes](https://github.com/dscripka/openWakeWord#license), the [Axiom custom model guide](docs/wakeword-model.md), and the [wake acknowledgement attribution](src/axiom/voice/assets/NOTICE.md).
 
 Run `axiom prepare-wakeword` once while online to download and validate the two shared ONNX feature-extractor assets. They are stored next to the configured classifier under `openwakeword`. The command downloads only these shared assets; it does not fetch upstream pre-trained wake-word classifiers. Wake detection itself performs local inference and does not need a network connection.
 

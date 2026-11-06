@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import platform
 from collections.abc import AsyncIterator
 
@@ -13,10 +14,19 @@ from axiom.integrations.windows_shortcut import InvalidShortcut, create_voice_sh
 from axiom.runtime.state import RuntimeState, RuntimeStateMachine
 from axiom.wakeword.assets import get_feature_assets_dir
 from axiom.wakeword.engine import WakeWordEngine
+from axiom.voice.feedback import (
+    SilentWakeAcknowledgement,
+    WakeAcknowledgement,
+    WakeAcknowledgementError,
+    WindowsWakeAcknowledgement,
+)
 from axiom.wakeword.openwakeword_engine import (
     WakeWordModelError,
     create_openwakeword_engine,
 )
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class AxiomRuntime:
@@ -32,10 +42,16 @@ class AxiomRuntime:
         audio: AudioInput,
         wakeword: WakeWordEngine,
         voice_shortcut: VoiceShortcut,
+        wake_acknowledgement: WakeAcknowledgement | None = None,
     ) -> None:
         self.audio = audio
         self.wakeword = wakeword
         self.voice_shortcut = voice_shortcut
+        self.wake_acknowledgement = (
+            wake_acknowledgement
+            if wake_acknowledgement is not None
+            else SilentWakeAcknowledgement()
+        )
         self.state = RuntimeStateMachine()
         self._run_task: asyncio.Task[None] | None = None
 
@@ -65,6 +81,10 @@ class AxiomRuntime:
 
                     self.state.transition(RuntimeState.TRIGGERING_CODEX_VOICE)
                     try:
+                        await self._play_wake_acknowledgement(frames)
+                    except WakeAcknowledgementError as error:
+                        _LOGGER.warning("Wake acknowledgement unavailable: %s", error)
+                    try:
                         self.voice_shortcut.trigger()
                     finally:
                         self.wakeword.reset()
@@ -75,6 +95,34 @@ class AxiomRuntime:
                 self.state.transition(RuntimeState.STOPPING)
             self.state.transition(RuntimeState.STOPPED)
             self._run_task = None
+
+    async def _play_wake_acknowledgement(
+        self,
+        frames: AsyncIterator[AudioFrame],
+    ) -> None:
+        playback = asyncio.create_task(self.wake_acknowledgement.play())
+        loop = asyncio.get_running_loop()
+        try:
+            while not playback.done():
+                try:
+                    await anext(frames)
+                except StopAsyncIteration:
+                    break
+            await playback
+
+            settle_until = loop.time() + 0.25
+            while loop.time() < settle_until:
+                try:
+                    await anext(frames)
+                except StopAsyncIteration:
+                    break
+        finally:
+            if not playback.done():
+                playback.cancel()
+                try:
+                    await playback
+                except asyncio.CancelledError:
+                    pass
 
     async def stop(self) -> None:
         """Cancel the resident loop and wait for audio resources to close."""
@@ -140,4 +188,5 @@ def build_runtime() -> AxiomRuntime:
         audio=WindowsDefaultAudioInput(),
         wakeword=wakeword,
         voice_shortcut=voice_shortcut,
+        wake_acknowledgement=WindowsWakeAcknowledgement(),
     )
